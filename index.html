@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BORA (보라) - 특수교육 연구용 어시스턴트 [Master V12]</title>
+    <title>BORA (보라) - 특수교육 연구용 AI 어시스턴트 [Master V13]</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -90,7 +90,7 @@
         </div>
         <div class="status-item">
             <div class="status-label">시스템 상태</div>
-            <div class="status-value" id="val-activity" style="color: var(--highlight);">👂 대기 중</div>
+            <div class="status-value" id="val-activity" style="color: var(--highlight);">👂 지시 대기</div>
         </div>
         <button class="icon-btn" style="right: 20px;" onclick="toggleOverlay('settingsOverlay')">⚙️</button>
     </div>
@@ -98,7 +98,7 @@
     <div class="main-display">
         <div class="visual-card" id="main-card" onclick="handleManualRecord()">
             <div class="big-emoji" id="main-emoji">👂</div>
-            <div class="keyword-text" id="main-word">준비 완료</div>
+            <div class="keyword-text" id="main-word">수업 시작을 눌러주세요</div>
             <div class="progress-container"><div class="progress-bar" id="p-bar"></div></div>
         </div>
     </div>
@@ -126,19 +126,19 @@
 
     <script>
         const instruction_db = {
-            "인사": "🙇", "앞에보세요": "👀", "앞을보세요": "👀",
+            "인사": "🙇", "앞에 보세요": "👀", "앞을 보세요": "👀", "앞에보세요": "👀",
             "집중": "🎯", "고개": "⬆️", "앉으세요": "🪑", "앉아요": "🪑", "일어나": "🧍",
-            "바른자세": "🧘", "모둠": "👥", "펴세요": "📖", "읽으세요": "🗣️",
+            "바른 자세": "🧘", "바른자세": "🧘", "모둠": "👥", "펴세요": "📖", "읽으세요": "🗣️",
             "쓰세요": "✍️", "조용": "🤫", "정리": "🧹", "나오세요": "🏃"
         };
         const praise_db = ["잘했어", "잘했어요", "좋아", "좋아요", "최고", "그렇지", "맞아", "성공", "훌륭해", "정답", "딩동댕", "그래", "오케이"];
 
-        const APP_STATE = { READY: 'ready', MEASURING: 'measuring', REBOOTING: 'rebooting' };
+        const APP_STATE = { READY: 'ready', MEASURING: 'measuring', RESETTING: 'resetting' };
         let currentState = APP_STATE.READY;
 
         let isListening = false;
         let studentName = "현00/송0", targetDelay = 10;
-        let recognition, animationFrameId, currentLog = null, logs = [];
+        let recognition = null, animationFrameId, currentLog = null, logs = [];
 
         function init() {
             const saved = JSON.parse(localStorage.getItem('bora_v1_settings') || '{}');
@@ -148,53 +148,60 @@
             
             document.getElementById('val-student').innerText = studentName;
             document.getElementById('val-delay').innerText = targetDelay + "초";
-            
-            setupRecognition();
         }
 
-        function setupRecognition() {
+        // [핵심] 음성 인식 엔진을 완전히 새로 생성하는 팩토리 함수
+        function createNewRecognition() {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (SpeechRecognition) {
-                recognition = new SpeechRecognition();
-                recognition.lang = 'ko-KR'; 
-                recognition.continuous = true; 
-                recognition.interimResults = true;
+            if (!SpeechRecognition) return null;
+
+            const rec = new SpeechRecognition();
+            rec.lang = 'ko-KR';
+            rec.continuous = false; // 한 마디씩 끊어서 인지 (버퍼 꼬임 방지)
+            rec.interimResults = true;
+
+            rec.onresult = (event) => {
+                if (currentState === APP_STATE.RESETTING) return;
+
+                // [V13] 새 엔진이므로 event.results의 0번째 결과만 신뢰함
+                const result = event.results[0];
+                const text = result[0].transcript.trim();
+                const cleanText = text.replace(/[\s\.\?!]/g, "");
                 
-                recognition.onresult = (event) => {
-                    if (currentState === APP_STATE.REBOOTING) return;
+                document.getElementById('interim-display').innerText = text;
 
-                    // [Master V12] 항상 가장 최신의 음성 결과 세그먼트만 분석
-                    const lastIdx = event.results.length - 1;
-                    const transcript = event.results[lastIdx][0].transcript.trim();
-                    const cleanText = transcript.replace(/[\s\.\?!]/g, "");
-                    
-                    document.getElementById('interim-display').innerText = transcript;
-
-                    if (currentState === APP_STATE.MEASURING) {
-                        // 1. 측정 중 -> 칭찬어 탐색
-                        if (praise_db.some(p => cleanText.includes(p.replace(/[\s\.\?!]/g, "")))) {
-                            completeLog("자동");
-                        }
-                    } else if (currentState === APP_STATE.READY) {
-                        // 2. 대기 중 -> 지시어 탐색
-                        for (let key in instruction_db) {
-                            if (cleanText.includes(key.replace(/[\s\.\?!]/g, ""))) {
-                                startMeasuring(key, instruction_db[key]);
-                                break;
-                            }
+                if (currentState === APP_STATE.MEASURING) {
+                    if (praise_db.some(p => cleanText.includes(p.replace(/[\s\.\?!]/g, "")))) {
+                        completeLog("자동");
+                    }
+                } else if (currentState === APP_STATE.READY) {
+                    for (let key in instruction_db) {
+                        if (cleanText.includes(key.replace(/[\s\.\?!]/g, ""))) {
+                            startMeasuring(key, instruction_db[key]);
+                            break;
                         }
                     }
-                };
+                }
+            };
 
-                recognition.onend = () => { 
-                    if (isListening) {
-                        // 세션 종료 시 즉시 다시 시작하여 연속성 확보
-                        setTimeout(() => {
-                            try { recognition.start(); } catch(e){}
-                        }, 100); 
-                    }
-                };
-            }
+            rec.onend = () => {
+                // 엔진이 죽으면 0.1초 뒤 다시 생성하여 무한 루프 구현
+                if (isListening && currentState !== APP_STATE.RESETTING) {
+                    setTimeout(() => {
+                        if (isListening) startEngine();
+                    }, 100);
+                }
+            };
+
+            return rec;
+        }
+
+        function startEngine() {
+            try {
+                if (recognition) recognition.abort(); // 기존 엔진 강제 종료
+                recognition = createNewRecognition();
+                if (recognition) recognition.start();
+            } catch(e) { console.warn("Engine Start Delay..."); }
         }
 
         function startMeasuring(word, emoji) {
@@ -245,8 +252,7 @@
             document.getElementById('p-bar').classList.add('recorded');
             document.getElementById('p-bar').style.width = '100%';
             
-            // [핵심] 리부트 명령: 물리적 세션 종료 및 초기화
-            rebootEngine(); 
+            hardReset(); // [핵심] 물리적 리셋 호출
         }
 
         function handleTimeout() {
@@ -257,18 +263,19 @@
             });
             localStorage.setItem('bora_research_logs', JSON.stringify(logs));
             showNotice(`⏰ 시간 초과`);
-            rebootEngine();
+            hardReset();
         }
 
-        function rebootEngine() {
-            currentState = APP_STATE.REBOOTING;
-            // 강제로 인식을 중단시켜 버퍼를 완전히 비움
-            try { recognition.stop(); } catch(e){}
+        // [V13 핵심] 엔진을 파괴하고 새로 만드는 물리적 리셋
+        function hardReset() {
+            currentState = APP_STATE.RESETTING;
+            if (recognition) recognition.abort(); // 즉시 파기
             
             setTimeout(() => {
                 resetUI();
                 currentState = APP_STATE.READY;
-            }, 500); // 0.5초의 정적 시간 확보
+                if (isListening) startEngine(); // 새 도화지로 시작
+            }, 300); // 0.3초의 완전 정적 시간 확보
         }
 
         function resetUI() {
@@ -287,15 +294,13 @@
         function toggleListening() {
             const btn = document.getElementById('recordBtn');
             if (!isListening) {
-                try {
-                    isListening = true;
-                    recognition.start();
-                    btn.innerText = "⏹️ 수업 중지"; btn.classList.add('active');
-                    document.getElementById('main-word').innerText = "지시를 기다리는 중...";
-                } catch(e){}
+                isListening = true;
+                btn.innerText = "⏹️ 수업 중지"; btn.classList.add('active');
+                document.getElementById('main-word').innerText = "지시를 기다리는 중...";
+                startEngine();
             } else {
                 isListening = false;
-                recognition.stop();
+                if (recognition) recognition.abort();
                 btn.innerText = "▶️ 수업 시작"; btn.classList.remove('active');
             }
         }
@@ -319,7 +324,7 @@
         }
 
         function exportCSV() {
-            if (logs.length === 0) return alert("데이터가 없습니다.");
+            if (logs.length === 0) return alert("기록된 데이터가 없습니다.");
             let csv = "\uFEFF회기,학생명,시간,지시어,지연시간(초),결과,방식\n";
             logs.forEach((l, idx) => {
                 csv += `${idx+1},${l.student},${l.time},${l.keyword},${l.latency},${l.result},${l.method}\n`;
