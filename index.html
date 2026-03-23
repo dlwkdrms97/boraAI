@@ -314,20 +314,46 @@
             
             if (countdownTimer) clearInterval(countdownTimer);
             
-            // 시각적 피드백 강화
-            const bar = document.getElementById('p-bar');
-            bar.classList.add('recorded');
-            
-            const notice = document.getElementById('noticePop');
-            notice.innerText = `✨ ${latencySec}초 만에 성공! 기록 완료`;
-            notice.style.display = 'block';
-            setTimeout(() => { notice.style.display = 'none'; }, 2000);
-            
+            // 즉각적인 데이터 저장 및 초기화 (대기 시간 제거)
             localStorage.setItem('bora_research_logs', JSON.stringify(researchLogs));
+            
+            // 즉시 다음 지시 대기 상태로 전환
+            resetToReady();
+            
+            // 기록 성공 알림만 짧게 표시 (화면 흐름은 방해하지 않음)
+            const notice = document.getElementById('noticePop');
+            notice.innerText = `✨ ${latencySec}초 기록 완료`;
+            notice.style.display = 'block';
+            setTimeout(() => { notice.style.display = 'none'; }, 1000);
+        }
+
+        function resetToReady() {
+            // 메인 카드 리셋
+            document.getElementById('main-word').innerText = "다음 지시 준비";
+            document.getElementById('main-emoji').innerText = "👂";
+            document.getElementById('val-activity').innerText = "대기 중";
+            
+            // 자막 창 즉시 초기화
+            document.getElementById('interim-display').innerText = "선생님의 다음 말씀을 기다리고 있어요...";
+            
+            // 프로그레스 바 리셋
+            const bar = document.getElementById('p-bar');
+            bar.style.width = '0%';
+            bar.classList.remove('recorded');
+            
+            // 연속 지시를 위해 모든 제어 변수 즉시 개방
+            lastVisualUpdate = 0; 
+            lastKeyword = "";
+            currentLogEntry = null; 
         }
 
         function handleStudentResponse() { if (currentLogEntry && currentLogEntry.latency === "N/A") completeResearchMeasurement(); }
-        function handleTimeout() { if (currentLogEntry && currentLogEntry.latency === "N/A") currentLogEntry.latency = "Timeout"; }
+        function handleTimeout() { 
+            if (currentLogEntry && currentLogEntry.latency === "N/A") {
+                currentLogEntry.latency = "Timeout";
+                resetToReady(); // 타임아웃 시에도 즉시 리셋
+            }
+        }
 
         function updateSettings() {
             const sub = document.getElementById('subjectInput').value.trim();
