@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BORA (보라) - 특수교육 연구용 어시스턴트 [본질강화판]</title>
+    <title>BORA (보라) - 특수교육 연구용 어시스턴트 [Master V1]</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -14,6 +14,7 @@
             --highlight: #fbbf24;
             --progress-color: #10b981;
             --success-blue: #3b82f6;
+            --error-red: #ef4444;
         }
 
         body { 
@@ -32,7 +33,7 @@
         }
         .status-item { text-align: center; flex: 1; }
         .status-label { font-size: 1.2vw; color: var(--text-sub); margin-bottom: 5px; font-weight: bold; }
-        .status-value { font-size: clamp(24px, 2.8vw, 52px); font-weight: 900; color: var(--accent); }
+        .status-value { font-size: clamp(24px, 2.8vw, 52px); font-weight: 900; color: var(--accent); white-space: nowrap; }
 
         .icon-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
@@ -42,38 +43,39 @@
         }
         .icon-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* 메인 카드 */
+        /* 메인 시각 카드 */
         .main-display { height: 55vh; display: flex; justify-content: center; align-items: center; padding: 2vh; box-sizing: border-box; }
         .visual-card { 
             background: var(--card-bg); border-radius: 40px; width: 100%; height: 100%; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
             box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 8px solid var(--accent);
-            text-align: center; position: relative;
+            text-align: center; position: relative; cursor: pointer;
         }
-        .big-emoji { font-size: 20vh; margin-bottom: 1vh; }
-        .keyword-text { font-size: 10vh; font-weight: 900; color: var(--highlight); text-shadow: 4px 4px 20px rgba(0,0,0,0.8); }
+        .big-emoji { font-size: 20vh; margin-bottom: 1vh; pointer-events: none; }
+        .keyword-text { font-size: 10vh; font-weight: 900; color: var(--highlight); text-shadow: 4px 4px 20px rgba(0,0,0,0.8); pointer-events: none; word-break: keep-all; }
 
-        /* 자막 및 컨트롤 */
-        .controls { height: 30vh; background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; border-top: 3px solid #334155; padding: 10px; }
-        .transcript-container { width: 95%; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 20px; min-height: 7vh; display: flex; align-items: center; justify-content: center; border: 2px solid #475569; }
-        .interim-text { color: #fff; font-size: 3.5vh; font-weight: 800; text-align: center; }
-
-        #recordBtn { padding: 1.5vh 5vw; font-size: 2.5vh; border-radius: 50px; border: none; background: #ef4444; color: white; cursor: pointer; font-weight: 900; }
-        #recordBtn.active { background: #10b981; }
-
-        /* 타이머 바 */
-        .progress-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 15px; background: rgba(255,255,255,0.1); }
-        .progress-bar { width: 0%; height: 100%; background: var(--progress-color); transition: width 0.1s linear; }
-
+        /* 기록 완료 팝업 */
         .notice-pop {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--success-blue); color: white; padding: 15px 40px;
+            background: var(--success-blue); color: white; padding: 12px 40px;
             border-radius: 50px; font-weight: bold; z-index: 5000; display: none;
             font-size: 2.2vh; box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
+        /* 하단 컨트롤 및 자막 */
+        .controls { height: 30vh; background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; border-top: 3px solid #334155; padding: 10px; }
+        .transcript-container { width: 95%; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 20px; min-height: 7vh; display: flex; align-items: center; justify-content: center; border: 2px solid #475569; }
+        .interim-text { color: #fff; font-size: 3.5vh; font-weight: 800; text-align: center; }
+
+        #recordBtn { padding: 1.5vh 5vw; font-size: 2.5vh; border-radius: 50px; border: none; background: var(--error-red); color: white; cursor: pointer; font-weight: 900; transition: 0.3s; }
+        #recordBtn.active { background: #10b981; }
+
+        .progress-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 15px; background: rgba(255,255,255,0.1); }
+        .progress-bar { width: 0%; height: 100%; background: var(--progress-color); transition: width 0.1s linear; }
+        .progress-bar.recorded { background: var(--success-blue) !important; width: 100% !important; }
+
         .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.98); z-index: 2000; display: none; padding: 5vh 10vw; box-sizing: border-box; backdrop-filter: blur(10px); }
-        .overlay-content { background: var(--card-bg); border: 4px solid var(--accent); border-radius: 30px; padding: 4vh; height: 100%; overflow-y: auto; }
+        .overlay-content { background: var(--card-bg); border: 4px solid var(--accent); border-radius: 30px; padding: 4vh; height: 100%; overflow-y: auto; color: var(--text-main); }
         
         @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
@@ -91,7 +93,7 @@
             <div class="status-value" id="val-delay">10초</div>
         </div>
         <div class="status-item">
-            <div class="status-label">현재 지시</div>
+            <div class="status-label">행동 상태</div>
             <div class="status-value" id="val-activity" style="color: var(--highlight);">대기 중</div>
         </div>
         <button class="icon-btn" style="right: 20px;" onclick="toggleOverlay('settingsOverlay')">⚙️</button>
@@ -115,30 +117,30 @@
     <!-- 설정 오버레이 -->
     <div id="settingsOverlay" class="overlay">
         <div class="overlay-content">
-            <h2 style="color:var(--accent);">⚙️ 연구 설정</h2>
+            <h2 style="color:var(--accent);">⚙️ 연구 및 시스템 설정</h2>
             <label>학생 이름</label><br><input type="text" id="set-student-name" style="width:90%; padding:15px; margin:10px 0; background:#0f172a; border:1px solid var(--accent); color:white;"><br>
             <label>지연 시간 (초)</label><br><input type="number" id="set-delay" style="width:90%; padding:15px; margin:10px 0; background:#0f172a; border:1px solid var(--accent); color:white;"><br>
             
             <div style="margin-top:30px; display:flex; gap:15px;">
-                <button onclick="saveSettings()" style="flex:1; padding:20px; background:var(--accent); border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">설정 저장 및 적용</button>
-                <button onclick="exportToCSV()" style="flex:1; padding:20px; background:#10b981; border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">📊 CSV 데이터 추출</button>
+                <button onclick="saveSettings()" style="flex:1; padding:20px; background:var(--accent); border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">설정 저장</button>
+                <button onclick="exportCSV()" style="flex:1; padding:20px; background:#10b981; border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">📊 CSV 추출</button>
                 <button onclick="toggleOverlay('settingsOverlay')" style="flex:1; padding:20px; background:#475569; border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">닫기</button>
             </div>
-            <button onclick="clearLogs()" style="margin-top:30px; width:100%; padding:10px; background:#ef4444; border:none; color:white; cursor:pointer;">⚠️ 데이터 전체 삭제</button>
+            <button onclick="clearLogs()" style="margin-top:30px; width:100%; padding:10px; background:var(--error-red); border:none; color:white; cursor:pointer;">⚠️ 데이터 초기화</button>
         </div>
     </div>
 
     <script>
-        // [필살 DB] 연구 현장에서 가장 빈번한 지시어 셋팅
+        // [로컬 지시어 DB] 연구 현장 필수어
         const db = {
             "인사합니다": "🙇", "인사해요": "🙇", "인사하세요": "🙇",
-            "앞에 보세요": "👀", "앞을 보세요": "👀", "칠판 보세요": "👨‍🏫",
+            "앞에 보세요": "👀", "앞을 보세요": "👀", "앞에보세요": "👀",
             "집중하세요": "🎯", "집중해요": "🎯", "여기 보세요": "🎯",
-            "고개 들어요": "⬆️", "고개 드세요": "⬆️",
+            "고개 들어요": "⬆️", "고개 드세요": "⬆️", "고개들어요": "⬆️",
             "자리에 앉아요": "🪑", "자리에 앉으세요": "🪑", "앉으세요": "🪑",
             "자리에서 일어나세요": "🧍", "일어나세요": "🧍",
-            "바른 자세 하세요": "🧘", "바른 자세": "🧘", "바른 자세로 앉으세요": "🧘",
-            "모둠 만들어요": "👥", "모둠 활동": "👥", "친구랑 같이": "🤝",
+            "바른 자세 하세요": "🧘", "바른 자세": "🧘", "바른자세": "🧘",
+            "모둠 만들어요": "👥", "모둠 활동": "👥", "모둠만들어요": "👥",
             "펴세요": "📖", "책 펴세요": "📖", "읽으세요": "🗣️", "쓰세요": "✍️",
             "조용히 하세요": "🤫", "정리하세요": "🧹", "나오세요": "🏃"
         };
@@ -152,7 +154,7 @@
             const saved = JSON.parse(localStorage.getItem('bora_v1_settings') || '{}');
             studentName = saved.name || "학생A";
             targetDelay = saved.delay || 10;
-            logs = JSON.parse(localStorage.getItem('bora_v1_logs') || '[]');
+            logs = JSON.parse(localStorage.getItem('bora_research_logs') || '[]');
             
             document.getElementById('val-student').innerText = studentName;
             document.getElementById('val-delay').innerText = targetDelay + "초";
@@ -167,25 +169,25 @@
         }
 
         function handleSpeech(event) {
-            // [무한기록 방지] 리셋 후 1.5초간 모든 음성 원천 차단
+            // 리셋 직후 1.5초간 모든 인식 무시 (무한루프 방지)
             if (Date.now() - lastResetTime < 1500) return;
 
             let interim = '';
             for (let i = lastResultIndex; i < event.results.length; ++i) {
                 const text = event.results[i][0].transcript.trim();
                 
-                // 1. 측정 중일 때 칭찬어 감지 시 즉시 종료
+                // 1. 측정 중일 때 칭찬어 감지 -> 즉시 마감
                 if (currentLog && positiveTriggers.some(t => text.includes(t))) {
-                    lastResultIndex = event.results.length;
+                    lastResultIndex = event.results.length; // 현재까지의 버퍼 잠금
                     completeLog("자동");
                     return;
                 }
 
-                // 2. 대기 중일 때 지시어 감지 시 측정 시작
+                // 2. 대기 중일 때 지시어 감지 -> 측정 시작
                 if (!currentLog) {
                     for (let key in db) {
                         if (text.includes(key)) {
-                            lastResultIndex = i + 1;
+                            lastResultIndex = i + 1; // 지시어 인식 시점까지의 버퍼 잠금
                             startLog(key, db[key]);
                             return;
                         }
@@ -197,16 +199,22 @@
         }
 
         function startLog(word, emoji) {
-            currentLog = { name: studentName, word: word, start: Date.now(), latency: "N/A" };
+            currentLog = { 
+                student: studentName, 
+                subject: "국어", 
+                keyword: word, 
+                startTime: Date.now(), 
+                result: "대기 중" 
+            };
             
             document.getElementById('main-word').innerText = word;
             document.getElementById('main-emoji').innerText = emoji;
             document.getElementById('val-activity').innerText = word;
             document.getElementById('main-card').style.animation = 'popIn 0.5s forwards';
             
-            // 타이머 시작
             let width = 100;
             const bar = document.getElementById('p-bar');
+            bar.classList.remove('recorded');
             countdownTimer = setInterval(() => {
                 width -= (100 / (targetDelay * 10));
                 bar.style.width = Math.max(0, width) + '%';
@@ -216,22 +224,26 @@
 
         function completeLog(method) {
             if (!currentLog) return;
-            const latency = ((Date.now() - currentLog.start) / 1000).toFixed(1);
+            const latency = ((Date.now() - currentLog.startTime) / 1000).toFixed(1);
             currentLog.latency = latency;
+            currentLog.result = "성공";
             currentLog.method = method;
             
             logs.push({...currentLog, time: new Date().toLocaleTimeString()});
-            localStorage.setItem('bora_v1_logs', JSON.stringify(logs));
+            saveData();
             
             showNotice(`✨ ${latency}초 기록 (${method})`);
-            resetApp();
+            document.getElementById('p-bar').classList.add('recorded');
+            setTimeout(resetApp, 500); // 시각적 확증 후 즉시 리셋
         }
 
         function failLog() {
             if (!currentLog) return;
-            currentLog.latency = "Timeout";
+            currentLog.latency = targetDelay.toFixed(1);
+            currentLog.result = "타임아웃";
+            
             logs.push({...currentLog, time: new Date().toLocaleTimeString()});
-            localStorage.setItem('bora_v1_logs', JSON.stringify(logs));
+            saveData();
             
             showNotice(`⏰ 시간 초과`);
             resetApp();
@@ -240,7 +252,7 @@
         function resetApp() {
             clearInterval(countdownTimer);
             currentLog = null;
-            lastResetTime = Date.now();
+            lastResetTime = Date.now(); // 리셋 타임스탬프 갱신
             
             document.getElementById('main-word').innerText = "다음 지시 대기 중";
             document.getElementById('main-emoji').innerText = "👂";
@@ -249,14 +261,17 @@
             document.getElementById('p-bar').style.width = '0%';
         }
 
-        function handleManualRecord() { if (currentLog) completeLog("수동"); }
+        function handleManualRecord() { if (currentLog) completeLog("수동터치"); }
 
         function toggleListening() {
             const btn = document.getElementById('recordBtn');
             if (!isListening) {
-                recognition.start(); isListening = true;
-                btn.innerText = "⏹️ 수업 중지"; btn.classList.add('active');
-                document.getElementById('interim-display').innerText = "말씀을 기다리고 있어요...";
+                try {
+                    recognition.start(); isListening = true;
+                    btn.innerText = "⏹️ 수업 중지"; btn.classList.add('active');
+                    document.getElementById('interim-display').innerText = "말씀을 기다리고 있어요...";
+                    lastResultIndex = 0;
+                } catch(e){}
             } else {
                 recognition.stop(); isListening = false;
                 btn.innerText = "▶️ 수업 시작"; btn.classList.remove('active');
@@ -285,16 +300,20 @@
             location.reload();
         }
 
-        function exportToCSV() {
+        function saveData() { localStorage.setItem('bora_research_logs', JSON.stringify(logs)); }
+
+        function exportCSV() {
             if (logs.length === 0) return alert("데이터가 없습니다.");
-            let csv = "\uFEFF학생명,시간,지시어,지연시간(초),방식\n";
-            csv += logs.map(l => `${l.name},${l.time},${l.word},${l.latency},${l.method || '자동'}`).join("\n");
-            const blob = new Blob([csv], {type: 'text/csv'});
+            let csv = "\uFEFF회기,학생명,시간,지시어,지연시간(초),결과,방식\n";
+            logs.forEach((l, idx) => {
+                csv += `${idx+1},${l.student},${l.time},${l.keyword},${l.latency},${l.result},${l.method || '자동'}\n`;
+            });
+            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
             a.download = `BORA_연구데이터_${new Date().toLocaleDateString()}.csv`; a.click();
         }
 
-        function clearLogs() { if(confirm("전체 삭제하시겠습니까?")) { localStorage.removeItem('bora_v1_logs'); location.reload(); } }
+        function clearLogs() { if(confirm("모든 데이터를 삭제하시겠습니까?")) { localStorage.removeItem('bora_research_logs'); location.reload(); } }
 
         window.onload = init;
     </script>
