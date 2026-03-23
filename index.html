@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BORA (보라) - 특수교육 연구용 AI 어시스턴트</title>
+    <title>BORA (보라) - 특수교육 연구용 AI 어시스턴트 [FINAL MASTER]</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -24,7 +24,6 @@
             display: flex; flex-direction: column; user-select: none;
         }
 
-        /* 상단 상태 바 */
         .status-bar { 
             height: 15vh; background: var(--card-bg); 
             display: flex; justify-content: space-around; align-items: center; 
@@ -43,7 +42,6 @@
         }
         .icon-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
 
-        /* 메인 카드 */
         .main-display { height: 55vh; display: flex; justify-content: center; align-items: center; padding: 2vh; box-sizing: border-box; }
         .visual-card { 
             background: var(--card-bg); border-radius: 40px; width: 100%; height: 100%; 
@@ -51,7 +49,6 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 8px solid var(--accent);
             text-align: center; position: relative; cursor: pointer;
         }
-        
         .big-emoji { font-size: 18vh; margin-bottom: 1vh; pointer-events: none; }
         .keyword-text { font-size: 9vh; font-weight: 900; color: var(--highlight); text-shadow: 4px 4px 20px rgba(0,0,0,0.8); pointer-events: none; word-break: keep-all; }
 
@@ -63,7 +60,6 @@
             font-size: 2vh;
         }
 
-        /* 하단 컨트롤 */
         .controls { height: 30vh; background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; border-top: 3px solid #334155; padding: 10px; }
         .transcript-container { width: 95%; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 20px; min-height: 7vh; display: flex; align-items: center; justify-content: center; border: 2px solid #475569; }
         .interim-text { color: #fff; font-size: 3vh; font-weight: 800; text-align: center; min-height: 1.2em; }
@@ -99,7 +95,7 @@
             <div class="status-value" id="val-topic">준비 중</div>
         </div>
         <div class="status-item">
-            <div class="status-label">최근 지시</div>
+            <div class="status-label">현재 상태</div>
             <div class="status-value" id="val-activity" style="color: var(--highlight);">대기 중</div>
         </div>
         <button class="icon-btn" style="right: 70px;" onclick="toggleOverlay('helpOverlay')">?</button>
@@ -133,62 +129,57 @@
     <!-- 도움말 오버레이 -->
     <div id="helpOverlay" class="overlay">
         <div class="overlay-content">
-            <h1 style="color:var(--accent);">BORA 사용 안내</h1>
-            <p>1. <b>[수업 시작]</b> 클릭 후 마이크를 허용하세요.</p>
-            <p>2. <b>로컬 DB 우선:</b> 등록된 지시어는 0초 만에 즉시 반응합니다.</p>
-            <p>3. <b>AI 하이브리드:</b> 로컬 DB에 없는 지시는 AI가 문맥을 분석합니다.</p>
-            <p>4. <b>연구 기록:</b> 칭찬어("잘했어") 감지 시 데이터 기록 후 즉시 초기화됩니다.</p>
-            <button onclick="toggleOverlay('helpOverlay')" style="padding:10px 30px; cursor:pointer; margin-top:20px;">닫기</button>
+            <h1 style="color:var(--accent);">BORA [최종 무결점 마스터]</h1>
+            <section style="line-height: 1.8;">
+                <p><b>1. 자가 교정 로직:</b> AI 분석 중 칭찬어 감지 시 AI 프로세스를 즉시 파괴하여 기록의 무결성을 보장합니다.</p>
+                <p><b>2. 로컬 우선 원칙:</b> 등록된 지시어는 어떤 상황에서도 AI보다 먼저 수행됩니다.</p>
+                <p><b>3. 정밀 지연시간 측정:</b> "잘했어" 감지 시 즉각 리셋되어 연속적인 중다기초선 연구를 지원합니다.</p>
+            </section>
+            <button onclick="toggleOverlay('helpOverlay')" style="padding:10px 30px; cursor:pointer; margin-top:20px; font-weight:bold;">확인</button>
         </div>
     </div>
 
     <!-- 설정 오버레이 -->
     <div id="settingsOverlay" class="overlay">
         <div class="overlay-content">
-            <h2 style="color:var(--accent);">⚙️ 설정 및 데이터</h2>
+            <h2 style="color:var(--accent);">⚙️ 연구 및 시스템 설정</h2>
             <label>학생 이름</label><br><input type="text" id="set-student-name" style="width:90%; padding:10px; margin:10px 0;"><br>
             <label>Gemini API 키</label><br><input type="password" id="set-api-key" style="width:90%; padding:10px; margin:10px 0;"><br>
-            <label>AI 분석 활성화 (로컬 DB 미매칭 시 가동)</label>
+            <label>AI 분석 활성화 (로컬 DB 미매칭 시)</label>
             <select id="set-ai-active" style="width:95%; padding:10px; margin:10px 0;">
                 <option value="false">비활성화</option><option value="true">활성화</option>
             </select>
             <div style="margin-top:20px; display:flex; gap:10px;">
                 <button onclick="saveAllSettings()" style="flex:1; padding:15px; background:var(--accent); border:none; color:white; font-weight:bold; cursor:pointer;">저장</button>
-                <button onclick="exportToCSV()" style="flex:1; padding:15px; background:#10b981; border:none; color:white; cursor:pointer;">CSV 내보내기</button>
+                <button onclick="exportToCSV()" style="flex:1; padding:15px; background:#10b981; border:none; color:white; cursor:pointer;">CSV 추출</button>
                 <button onclick="toggleOverlay('settingsOverlay')" style="flex:1; padding:15px; background:#475569; border:none; color:white; cursor:pointer;">닫기</button>
             </div>
-            <button onclick="clearResearchLogs()" style="margin-top:20px; padding:10px; background:var(--error-red); border:none; color:white; cursor:pointer; width:100%;">누적 데이터 전체 삭제</button>
+            <button onclick="clearResearchLogs()" style="margin-top:20px; padding:10px; background:var(--error-red); border:none; color:white; cursor:pointer; width:100%;">누적 데이터 삭제</button>
         </div>
     </div>
 
     <script>
-        // [로컬 DB] 교사의 발화에서 발견 즉시 0초 반응 (최우선순위)
         const activity_keywords = {
-            "자리에 앉으세요": {text: "자리에 앉기", emoji: "🪑"},
-            "자리에서 일어나세요": {text: "일어나기", emoji: "🧍"},
-            "바른자세로 앉으세요": {text: "바른 자세", emoji: "🧘"},
-            "앉으세요": {text: "자리에 앉기", emoji: "🪑"},
-            "일어나세요": {text: "일어나기", emoji: "🧍"},
-            "펴세요": {text: "책 펴기", emoji: "📖"},
-            "보세요": {text: "화면 보기", emoji: "👀"},
-            "집중": {text: "여기 집중!", emoji: "🎯"},
-            "조용": {text: "조용히 하기", emoji: "🤫"},
-            "최고": {text: "최고예요!", emoji: "👍"},
-            "읽으세요": {text: "소리내어 읽기", emoji: "🗣️"},
-            "인사": {text: "인사하기", emoji: "🙇"},
-            "정리": {text: "정리하기", emoji: "🧹"},
-            "나오세요": {text: "앞으로 나오기", emoji: "🏃"},
-            "기다리세요": {text: "잠시 기다리기", emoji: "⏳"}
+            "자리에 앉으세요": {text: "자리에 앉기", emoji: "🪑"}, "자리에서 일어나세요": {text: "일어나기", emoji: "🧍"},
+            "바른자세로 앉으세요": {text: "바른 자세", emoji: "🧘"}, "앉으세요": {text: "자리에 앉기", emoji: "🪑"},
+            "일어나세요": {text: "일어나기", emoji: "🧍"}, "펴세요": {text: "책 펴기", emoji: "📖"},
+            "보세요": {text: "화면 보기", emoji: "👀"}, "집중": {text: "여기 집중!", emoji: "🎯"},
+            "조용": {text: "조용히 하기", emoji: "🤫"}, "최고": {text: "최고예요!", emoji: "👍"},
+            "읽으세요": {text: "소리내어 읽기", emoji: "🗣️"}, "인사": {text: "인사하기", emoji: "🙇"},
+            "정리": {text: "정리하기", emoji: "🧹"}, "나오세요": {text: "앞으로 나오기", emoji: "🏃"}
         };
         const subject_db = {
-            "국어": "📝", "수학": "🔢", "사회": "🗺️", "과학": "🧪", "음악": "🎵", "체육": "⚽", 
-            "읽기": "📖", "쓰기": "✍️", "말하기": "🗣️", "낱말": "🔤", "문장": "📜", "그림": "🎨"
+            "국어": "📝", "수학": "🔢", "사회": "🗺️", "과학": "🧪", "음악": "🎵", "체육": "⚽", "읽기": "📖", "낱말": "🔤"
         };
         const positiveTriggers = ["잘했어", "잘했어요", "좋아요", "최고", "맞아요", "그래", "성공", "훌륭해", "정답"];
         
+        const APP_STATE = { LISTENING: 'listening', MEASURING: 'measuring', RESETTING: 'resetting' };
+        let currentState = APP_STATE.LISTENING;
+        let aiAbortController = null; // AI 분석 취소용 컨트롤러
+
         let isListening = false, currentSubject = "국어", targetDelay = 10, studentName = "학생A";
         let geminiApiKey = "", isAiActive = false, researchLogs = [], currentLogEntry = null;
-        let recognition, countdownTimer, lastVisualUpdate = 0, lastResetTime = 0;
+        let recognition, countdownTimer, lastResultIndex = 0, lastResetTime = 0;
 
         function initApp() {
             const saved = JSON.parse(localStorage.getItem('bora_settings') || '{}');
@@ -210,57 +201,49 @@
             window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (window.SpeechRecognition) {
                 recognition = new SpeechRecognition();
-                recognition.lang = 'ko-KR'; 
-                recognition.continuous = true; 
-                recognition.interimResults = true;
+                recognition.lang = 'ko-KR'; recognition.continuous = true; recognition.interimResults = true;
                 recognition.onresult = handleSpeechResult;
                 recognition.onend = () => { if(isListening) try { recognition.start(); } catch(e){} };
-                recognition.onerror = (e) => console.error("Mic Error:", e.error);
             }
         }
 
         function handleSpeechResult(event) {
-            // [소프트웨어 리셋] 칭찬 직후 1.2초 무시 (중복 인식 방지)
-            if (Date.now() - lastResetTime < 1200) return;
+            if (currentState === APP_STATE.RESETTING) return;
 
             let interim = '', final = '';
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) final += event.results[i][0].transcript;
-                else interim += event.results[i][0].transcript;
+            for (let i = lastResultIndex; i < event.results.length; ++i) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) final += transcript;
+                else interim += transcript;
             }
             const text = (final + interim).trim();
             if(!text) return;
             
             document.getElementById('interim-display').innerText = text;
 
-            // 1순위: 긍정 트리거 감지 (기록 마감)
-            if (currentLogEntry && currentLogEntry.latency === "N/A") {
-                if (positiveTriggers.some(t => text.includes(t))) {
-                    completeResearchMeasurement("자동");
-                    return; 
-                }
+            // [상태 머신 제어] 긍정 트리거는 어떤 상태에서도 최우선 처리
+            if (positiveTriggers.some(t => text.includes(t)) && currentState === APP_STATE.MEASURING) {
+                lastResultIndex = event.results.length; 
+                completeResearchMeasurement("자동");
+                return;
             }
 
-            // 2순위: 지시어 인식 (기록 대기 중일 때만)
-            if (!currentLogEntry || currentLogEntry.latency !== "N/A") {
-                processKeywords(text, !!final);
+            // [상태 머신 제어] 지시어 인식은 LISTENING 상태에서만
+            if (currentState === APP_STATE.LISTENING) {
+                processKeywords(text, final.length > 0, event.results.length);
             }
         }
 
-        async function processKeywords(text, isFinal) {
-            const now = Date.now();
-            if (now - lastVisualUpdate < 2000) return; 
-
+        async function processKeywords(text, hasFinal, currentIndex) {
             let foundWord = null, foundEmoji = null, foundType = null;
 
-            // [Step 1] 로컬 행동 지시어 (완전 일치 우선)
+            // 1. 로컬 행동 DB (최우선)
             for (let key in activity_keywords) {
                 if (text.includes(key)) {
                     foundWord = activity_keywords[key].text; foundEmoji = activity_keywords[key].emoji; foundType = '로컬'; break;
                 }
             }
-
-            // [Step 2] 로컬 교과 키워드 (Step 1 실패 시)
+            // 2. 로컬 교과 DB
             if (!foundWord) {
                 for (let key in subject_db) {
                     if (text.includes(key)) {
@@ -268,26 +251,29 @@
                     }
                 }
             }
-
-            // [Step 3] Gemini AI (로컬 DB에 매칭이 전혀 없고, 문장이 끝났을 때만)
-            if (!foundWord && isFinal && isAiActive && geminiApiKey) {
+            // 3. AI 하이브리드 (로컬 실패 및 문장 완성 시)
+            if (!foundWord && hasFinal && isAiActive && geminiApiKey) {
                 const aiResult = await callGemini(text);
-                if (aiResult) {
+                if (aiResult && currentState === APP_STATE.LISTENING) { 
                     foundWord = aiResult.word; foundEmoji = aiResult.emoji; foundType = 'AI';
                 }
             }
 
-            if (foundWord) updateVisual(foundWord, foundEmoji, foundType);
+            if (foundWord && currentState === APP_STATE.LISTENING) {
+                lastResultIndex = currentIndex;
+                updateVisual(foundWord, foundEmoji, foundType);
+            }
         }
 
         function updateVisual(word, emoji, type) {
-            lastVisualUpdate = Date.now();
+            currentState = APP_STATE.MEASURING;
             document.getElementById('main-word').innerText = word;
             document.getElementById('main-emoji').innerText = emoji;
             document.getElementById('val-activity').innerText = word;
             
             const card = document.getElementById('main-card');
-            card.style.animation = 'none'; card.offsetHeight; card.style.animation = 'popIn 0.5s forwards';
+            card.style.animation = 'none'; card.offsetHeight; 
+            card.style.animation = 'popIn 0.5s forwards';
             
             startCountdown();
             startResearch(word, type);
@@ -310,10 +296,15 @@
             localStorage.setItem('bora_research_logs', JSON.stringify(researchLogs));
         }
 
-        function handleManualRecord() { if (currentLogEntry && currentLogEntry.latency === "N/A") completeResearchMeasurement("수동"); }
+        function handleManualRecord() { if (currentState === APP_STATE.MEASURING) completeResearchMeasurement("수동"); }
 
         function completeResearchMeasurement(method) {
-            if (!currentLogEntry || currentLogEntry.latency !== "N/A") return;
+            if (!currentLogEntry) return;
+            
+            // AI 분석이 진행 중이라면 즉시 중단
+            if (aiAbortController) { aiAbortController.abort(); aiAbortController = null; }
+            
+            currentState = APP_STATE.RESETTING;
             const latency = ((Date.now() - currentLogEntry.startTime) / 1000).toFixed(1);
             currentLogEntry.latency = latency;
             currentLogEntry.method = method;
@@ -321,13 +312,11 @@
             if (countdownTimer) clearInterval(countdownTimer);
             localStorage.setItem('bora_research_logs', JSON.stringify(researchLogs));
             
-            lastResetTime = Date.now();
             const notice = document.getElementById('noticePop');
             notice.innerText = `✨ ${latency}초 기록 완료 (${method})`;
             notice.style.display = 'block';
-            setTimeout(() => { notice.style.display = 'none'; }, 1500);
             
-            resetToReady(); 
+            setTimeout(() => { notice.style.display = 'none'; resetToReady(); }, 1200);
         }
 
         function resetToReady() {
@@ -335,27 +324,31 @@
             document.getElementById('main-emoji').innerText = "👂";
             document.getElementById('val-activity').innerText = "대기 중";
             document.getElementById('interim-display').innerText = ""; 
-            const bar = document.getElementById('p-bar');
-            bar.style.width = '0%';
-            lastVisualUpdate = 0; 
+            document.getElementById('p-bar').style.width = '0%';
+            
             currentLogEntry = null; 
+            currentState = APP_STATE.LISTENING;
         }
 
-        function handleTimeout() { if (currentLogEntry && currentLogEntry.latency === "N/A") { currentLogEntry.latency = "Timeout"; lastResetTime = Date.now(); resetToReady(); } }
+        function handleTimeout() { if (currentState === APP_STATE.MEASURING) { currentLogEntry.latency = "Timeout"; completeResearchMeasurement("타임아웃"); } }
 
         async function callGemini(text) {
             const displayArea = document.getElementById('interim-display');
             displayArea.innerHTML = `<span style="color:var(--accent); animation:pulse 1s infinite;">🤖 AI 지시 분석 중...</span>`;
+            
+            aiAbortController = new AbortController(); // 새로운 분석 컨트롤러 생성
+            
             try {
                 const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
                     method: 'POST', headers: {'Content-Type': 'application/json'},
+                    signal: aiAbortController.signal,
                     body: JSON.stringify({ contents: [{ parts: [{ text: `특수교육 교사의 말 "${text}"에서 학생 행동 키워드(2-4자)와 이모지를 JSON {"word":"단어","emoji":"이모지"} 형식으로만 추출해줘.` }] }] })
                 });
                 const data = await response.json();
-                const jsonText = data.candidates[0].content.parts[0].text;
-                const match = jsonText.match(/\{.*?\}/);
-                return JSON.parse(match[0]);
-            } catch (e) { return null; }
+                const jsonMatch = data.candidates[0].content.parts[0].text.match(/\{.*?\}/);
+                aiAbortController = null;
+                return JSON.parse(jsonMatch[0]);
+            } catch (e) { aiAbortController = null; return null; }
         }
 
         function toggleListening() {
@@ -365,6 +358,8 @@
                     recognition.start(); isListening = true; 
                     btn.innerText = "⏹️ 수업 중지"; btn.classList.add('active'); 
                     document.getElementById('main-word').innerText = "선생님의 지시를 기다리는 중...";
+                    lastResultIndex = 0;
+                    currentState = APP_STATE.LISTENING;
                 } catch(e){} 
             }
             else { recognition.stop(); isListening = false; btn.innerText = "▶️ 수업 시작"; btn.classList.remove('active'); }
@@ -392,7 +387,7 @@
             geminiApiKey = document.getElementById('set-api-key').value;
             isAiActive = document.getElementById('set-ai-active').value === 'true';
             localStorage.setItem('bora_settings', JSON.stringify({studentName, targetDelay, currentSubject, geminiApiKey, isAiActive}));
-            if(!isQuick) { alert('설정이 저장되었습니다.'); location.reload(); }
+            if(!isQuick) { alert('설정 저장 완료'); location.reload(); }
         }
         function exportToCSV() {
             if(researchLogs.length === 0) { alert('데이터가 없습니다.'); return; }
