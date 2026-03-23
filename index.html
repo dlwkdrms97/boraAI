@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BORA (보라) - 특수교육 연구용 AI 어시스턴트 [Master V14]</title>
+    <title>BORA (보라) - 특수교육 연구용 어시스턴트 [Master V15]</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -50,7 +50,7 @@
             text-align: center; position: relative; cursor: pointer;
         }
         .big-emoji { font-size: 20vh; margin-bottom: 1vh; pointer-events: none; }
-        .keyword-text { font-size: 10vh; font-weight: 900; color: var(--highlight); text-shadow: 4px 4px 20px rgba(0,0,0,0.8); pointer-events: none; }
+        .keyword-text { font-size: 9vh; font-weight: 900; color: var(--highlight); text-shadow: 4px 4px 20px rgba(0,0,0,0.8); pointer-events: none; }
 
         .notice-pop {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -63,7 +63,7 @@
         .transcript-container { width: 95%; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 20px; min-height: 7vh; display: flex; align-items: center; justify-content: center; border: 2px solid #475569; }
         .interim-text { color: #fff; font-size: 3.5vh; font-weight: 800; text-align: center; min-height: 1.2em; }
 
-        #recordBtn { padding: 1.5vh 5vw; font-size: 2.5vh; border-radius: 50px; border: none; background: var(--error-red); color: white; cursor: pointer; font-weight: 900; transition: 0.3s; }
+        #recordBtn { padding: 1.5vh 5vw; font-size: 2.5vh; border-radius: 50px; border: none; background: var(--error-red); color: white; cursor: pointer; font-weight: 900; }
         #recordBtn.active { background: #10b981; }
 
         .progress-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 15px; background: rgba(255,255,255,0.1); }
@@ -80,18 +80,9 @@
     <div id="noticePop" class="notice-pop">✨ 기록 완료</div>
 
     <div class="status-bar">
-        <div class="status-item">
-            <div class="status-label">연구 대상</div>
-            <div class="status-value" id="val-student">현00/송0</div>
-        </div>
-        <div class="status-item" style="border-left: 2px solid #334155; border-right: 2px solid #334155;">
-            <div class="status-label">목표 지연시간</div>
-            <div class="status-value" id="val-delay">10초</div>
-        </div>
-        <div class="status-item">
-            <div class="status-label">시스템 상태</div>
-            <div class="status-value" id="val-activity" style="color: var(--highlight);">👂 대기 중</div>
-        </div>
+        <div class="status-item"><div class="status-label">학생</div><div class="status-value" id="val-student">현00/송0</div></div>
+        <div class="status-item" style="border-left: 2px solid #334155; border-right: 2px solid #334155;"><div class="status-label">지연시간 목표</div><div class="status-value" id="val-delay">10초</div></div>
+        <div class="status-item"><div class="status-label">상태</div><div class="status-value" id="val-activity" style="color: var(--highlight);">지시 대기</div></div>
         <button class="icon-btn" style="right: 20px;" onclick="toggleOverlay('settingsOverlay')">⚙️</button>
     </div>
 
@@ -112,10 +103,10 @@
 
     <div id="settingsOverlay" class="overlay">
         <div class="overlay-content">
-            <h2 style="color:var(--accent);">⚙️ 연구 환경 설정</h2>
+            <h2 style="color:var(--accent);">⚙️ 연구 및 시스템 설정</h2>
             <label>학생 이름</label><br><input type="text" id="set-student-name" style="width:90%; padding:15px; margin:10px 0; background:#0f172a; border:1px solid var(--accent); color:white;"><br>
             <label>지연 시간 (초)</label><br><input type="number" id="set-delay" style="width:90%; padding:15px; margin:10px 0; background:#0f172a; border:1px solid var(--accent); color:white;"><br>
-            <div style="margin-top:30px; display:flex; gap:15px;">
+            <div style="margin-top:30px; display:flex; gap:10px;">
                 <button onclick="saveSettings()" style="flex:1; padding:20px; background:var(--accent); border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">설정 저장</button>
                 <button onclick="exportCSV()" style="flex:1; padding:20px; background:#10b981; border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">📊 CSV 추출</button>
                 <button onclick="toggleOverlay('settingsOverlay')" style="flex:1; padding:20px; background:#475569; border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">닫기</button>
@@ -125,27 +116,41 @@
     </div>
 
     <script>
+        // [Master V15] 100대 행동 지시어 데이터베이스
         const instruction_db = {
-            "인사": "🙇", "앞에 보세요": "👀", "앞을 보세요": "👀", "앞에보세요": "👀",
-            "집중하세요": "🎯", "집중해요": "🎯", "여기 보세요": "🎯", "여기보세요": "🎯",
-            "고개 들어요": "⬆️", "고개 드세요": "⬆️", "고개들어요": "⬆️",
-            "자리에 앉아요": "🪑", "자리에 앉으세요": "🪑", "앉으세요": "🪑",
-            "자리에서 일어나세요": "🧍", "일어나세요": "🧍", "일어나": "🧍",
-            "바른 자세 하세요": "🧘", "바른 자세": "🧘", "바른자세": "🧘",
-            "모둠 만들어요": "👥", "모둠 활동": "👥", "모둠만들어요": "👥",
-            "펴세요": "📖", "책 펴세요": "📖", "읽으세요": "🗣️",
-            "쓰세요": "✍️", "조용히 하세요": "🤫", "정리하세요": "🧹", "나오세요": "🏃"
+            // 1. 수업 준비 및 기본 자세
+            "앉으세요": "🪑", "일어나세요": "🧍", "제자리": "🔙", "허리 펴기": "🧘", "정면 보기": "👁️",
+            "책상 정리": "🧹", "가방 놓기": "🎒", "의자 당기기": "🪑", "필통 꺼내기": "✏️", "책 꺼내기": "📚",
+            "준비물 확인": "🎒", "교과서 펴기": "📖", "공책 펴기": "📝", "날짜 쓰기": "📅", "이름 쓰기": "👤",
+            "바른 자세": "🧘", "손 무릎": "👐", "발 모으기": "🦶", "심호흡": "🌬️", "미소 짓기": "😊",
+            // 2. 주의 집중
+            "여기 보세요": "🎯", "칠판 보세요": "👨‍🏫", "선생님 보세요": "👩‍🏫", "화면 보세요": "🖥️", "나를 봐요": "👁️",
+            "주목": "📢", "집중": "🎯", "눈 맞춤": "👁️", "손가락 집중": "☝️", "불 끄기": "💡",
+            "그림 보세요": "🖼️", "글자 보세요": "🔤", "가리키기": "☝️", "밑줄 보세요": "〰️", "색깔 확인": "🎨",
+            "눈 크게": "👀", "깜빡이지 않기": "👁️", "고개 돌리기": "🔄", "지시봉 보기": "🦯", "화살표 보기": "➡️",
+            // 3. 과제 수행
+            "연필 잡기": "✏️", "글씨 쓰기": "✍️", "줄 긋기": "📏", "동그라미": "⭕", "색칠하기": "🖍️",
+            "가위질": "✂️", "풀칠하기": "🧴", "붙이기": "📋", "오리기": "✂️", "접기": "📄",
+            "번호 매기기": "1️⃣", "단어 찾기": "🔍", "선 잇기": "🔗", "빈칸 채우기": "📥", "스티커 붙이기": "✨",
+            "넘기기": "📑", "덮기": "📕", "카드 고르기": "🃏", "버튼 누르기": "🔘", "마우스 클릭": "🖱️",
+            "키보드 입력": "⌨️", "태블릿 켜기": "📱", "탭 하기": "👆", "드래그": "🖱️", "확대하기": "🔍",
+            // 4. 의사소통
+            "들으세요": "👂", "말하세요": "🗣️", "따라 하기": "🗣️", "큰 소리로": "📢", "또박또박": "🗣️",
+            "네": "✅", "아니오": "❌", "손들기": "🙋", "발표하기": "🙋", "대답하기": "💬",
+            "질문하기": "❓", "도움 요청": "🆘", "친구랑 인사": "🤝", "하이파이브": "🙌", "박수 세 번": "👏",
+            "고개 끄덕": "🙆", "손 흔들기": "👋", "웃으며 말하기": "😊", "기다렸다 말하기": "⏳", "천천히 말하기": "🐢",
+            // 5. 규칙 및 정리
+            "조용히": "🤫", "기다려요": "⏳", "멈추세요": "🛑", "차례 지키기": "🚶", "줄 서기": "🚶",
+            "천천히 하기": "🐢", "다시 하기": "🔄", "끝까지 하기": "🏁", "포기하지 않기": "💪", "쉬는 시간": "⏰",
+            "뒷정리": "🧹", "쓰레기 줍기": "🗑️", "사물함 넣기": "📦", "가방 싸기": "🎒", "인사하고 가기": "🙇"
         };
         const praise_db = ["잘했어", "잘했어요", "좋아", "좋아요", "최고", "그렇지", "맞아", "성공", "훌륭해", "정답", "딩동댕", "그래", "오케이"];
 
         const APP_STATE = { READY: 'ready', MEASURING: 'measuring', SUCCESS: 'success' };
         let currentState = APP_STATE.READY;
-
         let isListening = false;
         let studentName = "현00/송0", targetDelay = 10;
         let recognition, animationFrameId, currentLog = null, logs = [];
-        
-        // [Master V14 핵심 기술] 스트림 커서 (처리된 문자열의 길이를 추적)
         let sessionProcessedLength = 0;
 
         function init() {
@@ -153,10 +158,8 @@
             studentName = saved.name || "현00/송0";
             targetDelay = saved.delay || 10;
             logs = JSON.parse(localStorage.getItem('bora_research_logs') || '[]');
-            
             document.getElementById('val-student').innerText = studentName;
             document.getElementById('val-delay').innerText = targetDelay + "초";
-            
             setupRecognition();
         }
 
@@ -164,164 +167,96 @@
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (SpeechRecognition) {
                 recognition = new SpeechRecognition();
-                recognition.lang = 'ko-KR'; 
-                recognition.continuous = true; // 무한 상시 청취
-                recognition.interimResults = true;
-                
-                recognition.onstart = () => {
-                    // 마이크가 켜질 때마다 커서 초기화
-                    sessionProcessedLength = 0; 
-                };
-
+                recognition.lang = 'ko-KR'; recognition.continuous = true; recognition.interimResults = true;
+                recognition.onstart = () => { sessionProcessedLength = 0; };
                 recognition.onresult = (event) => {
-                    // 1. 현재 세션의 전체 텍스트 수집
-                    let currentSessionTranscript = "";
-                    for (let i = 0; i < event.results.length; i++) {
-                        currentSessionTranscript += event.results[i][0].transcript;
-                    }
-
-                    // 브라우저 버그로 문장이 갑자기 줄어들면 커서 보정
-                    if (sessionProcessedLength > currentSessionTranscript.length) {
-                        sessionProcessedLength = currentSessionTranscript.length;
-                    }
-
-                    // 2. [잘라내기] 이미 처리된 텍스트 이후의 '새로운 말'만 추출
-                    let unprocessed = currentSessionTranscript.substring(sessionProcessedLength);
-                    let cleanUnprocessed = unprocessed.replace(/[\s\.\?!]/g, ""); // 공백/특문 제거
-
-                    // 3. UI 피드백 (현재 시스템이 듣고 있는 순수한 단어만 표시)
-                    if (unprocessed.trim().length > 0) {
-                        document.getElementById('interim-display').innerText = unprocessed;
-                    } else {
-                        document.getElementById('interim-display').innerText = 
-                            (currentState === APP_STATE.READY) ? "선생님의 지시를 기다리는 중..." : "칭찬어를 기다리는 중...";
-                    }
-
-                    // 4. 상태 기반 텍스트 소비 (Consume)
+                    if (currentState === APP_STATE.SUCCESS) return;
+                    let currentTranscript = "";
+                    for (let i = 0; i < event.results.length; i++) currentTranscript += event.results[i][0].transcript;
+                    if (sessionProcessedLength > currentTranscript.length) sessionProcessedLength = currentTranscript.length;
+                    let unprocessed = currentTranscript.substring(sessionProcessedLength);
+                    let clean = unprocessed.replace(/[\s\.\?!]/g, "");
+                    if (unprocessed.trim().length > 0) document.getElementById('interim-display').innerText = unprocessed;
                     if (currentState === APP_STATE.READY) {
                         for (let key in instruction_db) {
-                            if (cleanUnprocessed.includes(key.replace(/[\s\.\?!]/g, ""))) {
-                                // 단어 발견 즉시, 현재까지의 전체 문장 길이를 커서로 저장 (버퍼 잘라내기)
-                                sessionProcessedLength = currentSessionTranscript.length;
-                                startMeasuring(key, instruction_db[key]);
-                                break;
+                            if (clean.includes(key.replace(/[\s\.\?!]/g, ""))) {
+                                sessionProcessedLength = currentTranscript.length;
+                                startMeasuring(key, instruction_db[key]); break;
                             }
                         }
                     } else if (currentState === APP_STATE.MEASURING) {
                         for (let p of praise_db) {
-                            if (cleanUnprocessed.includes(p.replace(/[\s\.\?!]/g, ""))) {
-                                // 단어 발견 즉시 버퍼 잘라내기
-                                sessionProcessedLength = currentSessionTranscript.length;
-                                completeLog("자동인식");
-                                break;
+                            if (clean.includes(p.replace(/[\s\.\?!]/g, ""))) {
+                                sessionProcessedLength = currentTranscript.length;
+                                completeLog("자동"); break;
                             }
                         }
                     }
                 };
-
-                recognition.onend = () => { 
-                    // 엔진이 모종의 이유로 꺼지면 즉시 재시작
-                    if (isListening) {
-                        setTimeout(() => {
-                            try { recognition.start(); } catch(e){}
-                        }, 50); 
-                    }
-                };
+                recognition.onend = () => { if (isListening) setTimeout(() => { try { recognition.start(); } catch(e){} }, 50); };
             }
         }
 
         function startMeasuring(word, emoji) {
             currentState = APP_STATE.MEASURING;
             currentLog = { student: studentName, keyword: word, startTime: Date.now() };
-            
             document.getElementById('main-word').innerText = word;
             document.getElementById('main-emoji').innerText = emoji;
             document.getElementById('val-activity').innerText = "⏱️ 측정 중";
-            document.getElementById('interim-display').innerText = "칭찬어를 기다리는 중..."; // 즉각 UI 갱신
-            
-            const card = document.getElementById('main-card');
-            card.style.animation = 'none'; card.offsetHeight; card.style.animation = 'popIn 0.5s forwards';
-            
-            cancelAnimationFrame(animationFrameId);
-            runTimer();
+            document.getElementById('main-card').style.animation = 'none'; document.getElementById('main-card').offsetHeight;
+            document.getElementById('main-card').style.animation = 'popIn 0.5s forwards';
+            cancelAnimationFrame(animationFrameId); runTimer();
         }
 
         function runTimer() {
             if (currentState !== APP_STATE.MEASURING) return;
             const bar = document.getElementById('p-bar');
-            const now = Date.now();
-            const elapsed = now - currentLog.startTime;
-            const remaining = (targetDelay * 1000) - elapsed;
-            const progress = Math.max(0, (remaining / (targetDelay * 1000)) * 100);
-
+            const elapsed = Date.now() - currentLog.startTime;
+            const progress = Math.max(0, (1 - (elapsed / (targetDelay * 1000))) * 100);
             bar.style.width = progress + '%';
-
-            if (progress <= 0) {
-                handleTimeout();
-            } else {
-                animationFrameId = requestAnimationFrame(runTimer);
-            }
+            if (progress <= 0) handleTimeout();
+            else animationFrameId = requestAnimationFrame(runTimer);
         }
 
         function completeLog(method) {
             currentState = APP_STATE.SUCCESS;
-            
             const latency = ((Date.now() - currentLog.startTime) / 1000).toFixed(1);
-            logs.push({
-                student: currentLog.student, time: new Date().toLocaleTimeString(),
-                keyword: currentLog.keyword, latency: latency, result: "성공", method: method
-            });
+            logs.push({ student: currentLog.student, time: new Date().toLocaleTimeString(), keyword: currentLog.keyword, latency: latency, result: "성공", method: method });
             localStorage.setItem('bora_research_logs', JSON.stringify(logs));
-            
             showNotice(`✨ ${latency}초 기록 완료`);
-            const bar = document.getElementById('p-bar');
-            bar.classList.add('recorded');
-            bar.style.width = '100%';
-            
-            // 0.8초 후 완전 리셋
-            setTimeout(resetToReady, 800); 
+            document.getElementById('p-bar').classList.add('recorded');
+            document.getElementById('p-bar').style.width = '100%';
+            setTimeout(resetToReady, 800);
         }
 
         function handleTimeout() {
             currentState = APP_STATE.SUCCESS;
-            logs.push({
-                student: studentName, time: new Date().toLocaleTimeString(),
-                keyword: currentLog.keyword, latency: targetDelay.toFixed(1), result: "타임아웃", method: "자동"
-            });
+            logs.push({ student: studentName, time: new Date().toLocaleTimeString(), keyword: currentLog.keyword, latency: targetDelay.toFixed(1), result: "타임아웃", method: "자동" });
             localStorage.setItem('bora_research_logs', JSON.stringify(logs));
-            showNotice(`⏰ 시간 초과`);
-            resetToReady();
+            showNotice(`⏰ 시간 초과`); resetToReady();
         }
 
         function resetToReady() {
-            currentState = APP_STATE.READY;
-            currentLog = null;
+            isMeasuring = false; currentLog = null;
             document.getElementById('main-word').innerText = "다음 지시 준비";
             document.getElementById('main-emoji').innerText = "👂";
             document.getElementById('val-activity').innerText = "👂 지시 대기";
-            document.getElementById('interim-display').innerText = "선생님의 지시를 기다리는 중...";
-            const bar = document.getElementById('p-bar');
-            bar.style.width = '0%';
-            bar.classList.remove('recorded');
+            document.getElementById('interim-display').innerText = "";
+            const bar = document.getElementById('p-bar'); bar.style.width = '0%'; bar.classList.remove('recorded');
+            currentState = APP_STATE.READY;
         }
 
-        function handleManualRecord() { if (currentState === APP_STATE.MEASURING) completeLog("수동터치"); }
+        function handleManualRecord() { if (currentState === APP_STATE.MEASURING) completeLog("수동"); }
 
         function toggleListening() {
             const btn = document.getElementById('recordBtn');
             if (!isListening) {
-                try {
-                    isListening = true;
-                    sessionProcessedLength = 0; // 시작할 때 무조건 초기화
-                    recognition.start();
-                    btn.innerText = "⏹️ 수업 중지"; btn.classList.add('active');
-                    document.getElementById('interim-display').innerText = "선생님의 지시를 기다리는 중...";
-                } catch(e){}
+                isListening = true; recognition.start();
+                btn.innerText = "⏹️ 수업 중지"; btn.classList.add('active');
+                document.getElementById('interim-display').innerText = "지시를 기다리는 중...";
             } else {
-                isListening = false;
-                recognition.stop();
+                isListening = false; recognition.stop();
                 btn.innerText = "▶️ 수업 시작"; btn.classList.remove('active');
-                document.getElementById('interim-display').innerText = "수업 시작을 눌러주세요";
             }
         }
 
@@ -344,18 +279,15 @@
         }
 
         function exportCSV() {
-            if (logs.length === 0) return alert("데이터가 없습니다.");
+            if (logs.length === 0) return alert("기록된 데이터가 없습니다.");
             let csv = "\uFEFF회기,학생명,시간,지시어,지연시간(초),결과,방식\n";
-            logs.forEach((l, idx) => {
-                csv += `${idx+1},${l.student},${l.time},${l.keyword},${l.latency},${l.result},${l.method}\n`;
-            });
+            logs.forEach((l, idx) => { csv += `${idx+1},${l.student},${l.time},${l.keyword},${l.latency},${l.result},${l.method}\n`; });
             const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            a.download = `BORA_연구데이터_${new Date().toLocaleDateString()}.csv`; a.click();
+            a.download = `BORA_최종연구데이터_${new Date().toLocaleDateString()}.csv`; a.click();
         }
 
         function clearLogs() { if(confirm("모든 데이터를 삭제할까요?")) { localStorage.clear(); location.reload(); } }
-
         window.onload = init;
     </script>
 </body>
