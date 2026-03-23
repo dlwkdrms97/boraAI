@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BORA (보라) - 특수교육 연구용 AI 어시스턴트 [Master V9]</title>
+    <title>BORA (보라) - 특수교육 연구용 AI 어시스턴트 [Master V10]</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -50,18 +50,18 @@
             text-align: center; position: relative; cursor: pointer;
         }
         .big-emoji { font-size: 20vh; margin-bottom: 1vh; pointer-events: none; }
-        .keyword-text { font-size: 10vh; font-weight: 900; color: var(--highlight); text-shadow: 4px 4px 20px rgba(0,0,0,0.8); pointer-events: none; word-break: keep-all; }
+        .keyword-text { font-size: 10vh; font-weight: 900; color: var(--highlight); text-shadow: 4px 4px 20px rgba(0,0,0,0.8); pointer-events: none; }
 
         .notice-pop {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
             background: var(--success-blue); color: white; padding: 15px 40px;
             border-radius: 50px; font-weight: bold; z-index: 5000; display: none;
-            font-size: 2.2vh; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            font-size: 2vh; box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
         .controls { height: 30vh; background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; border-top: 3px solid #334155; padding: 10px; }
         .transcript-container { width: 95%; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 20px; min-height: 7vh; display: flex; align-items: center; justify-content: center; border: 2px solid #475569; }
-        .interim-text { color: #fff; font-size: 3.5vh; font-weight: 800; text-align: center; }
+        .interim-text { color: #fff; font-size: 3.5vh; font-weight: 800; text-align: center; min-height: 1.2em; }
 
         #recordBtn { padding: 1.5vh 5vw; font-size: 2.5vh; border-radius: 50px; border: none; background: var(--error-red); color: white; cursor: pointer; font-weight: 900; }
         #recordBtn.active { background: #10b981; }
@@ -89,8 +89,8 @@
             <div class="status-value" id="val-delay">10초</div>
         </div>
         <div class="status-item">
-            <div class="status-label">시스템 상태</div>
-            <div class="status-value" id="val-activity" style="color: var(--highlight);">👂 지시 대기</div>
+            <div class="status-label">현재 상태</div>
+            <div class="status-value" id="val-activity" style="color: var(--highlight);">👂 대기 중</div>
         </div>
         <button class="icon-btn" style="right: 20px;" onclick="toggleOverlay('settingsOverlay')">⚙️</button>
     </div>
@@ -125,24 +125,25 @@
     </div>
 
     <script>
-        // [로컬 지시어 DB] 행위 중심
+        // [로컬 지시어 DB]
         const instruction_db = {
-            "인사": "🙇", "앞에보세요": "👀", "앞을보세요": "👀",
-            "집중": "🎯", "고개": "⬆️", "앉으세요": "🪑", "앉아요": "🪑", "일어나": "🧍",
-            "바른자세": "🧘", "모둠": "👥", "펴세요": "📖", "읽으세요": "🗣️",
+            "인사": "🙇", "앞에 보세요": "👀", "앞을 보세요": "👀", "앞에보세요": "👀",
+            "집중하세요": "🎯", "집중해요": "🎯", "여기 보세요": "🎯",
+            "고개": "⬆️", "앉으세요": "🪑", "앉아요": "🪑", "일어나": "🧍",
+            "바른 자세": "🧘", "바른자세": "🧘", "바른자세로앉으세요": "🧘",
+            "모둠": "👥", "펴세요": "📖", "읽으세요": "🗣️",
             "쓰세요": "✍️", "조용": "🤫", "정리": "🧹", "나오세요": "🏃"
         };
-        // [긍정어 DB] 정밀 감지
-        const praise_db = ["잘했어", "잘했어요", "좋아", "좋아요", "최고", "그렇지", "맞아", "성공", "훌륭해", "정답", "딩동댕", "그래", "오케이"];
+        const praise_db = ["잘했어", "잘했어요", "좋아", "좋아요", "최고", "그렇지", "맞아", "성공", "훌륭해", "정답", "딩동댕", "그래", "오케이", "딩동댕"];
 
-        // 상태 머신용
-        const APP_STATE = { READY: 'ready', MEASURING: 'measuring', SUCCESS: 'success' };
+        // 상태 관리
+        const APP_STATE = { READY: 'ready', MEASURING: 'measuring' };
         let currentState = APP_STATE.READY;
 
         let isListening = false;
         let studentName = "현00/송0", targetDelay = 10;
         let recognition, animationFrameId, currentLog = null, logs = [];
-        let lastResultIndex = 0; 
+        let lastActionTimestamp = 0; // 중복 방지 타임스탬프
 
         function init() {
             const saved = JSON.parse(localStorage.getItem('bora_v1_settings') || '{}');
@@ -161,34 +162,29 @@
             if (SpeechRecognition) {
                 recognition = new SpeechRecognition();
                 recognition.lang = 'ko-KR'; 
-                recognition.continuous = true; // 끊김 없는 수집
+                recognition.continuous = true; 
                 recognition.interimResults = true;
                 
                 recognition.onresult = (event) => {
-                    if (currentState === APP_STATE.SUCCESS) return;
-
-                    // [V9 핵심] lastResultIndex 이후의 새로운 발화 세그먼트만 루프하며 분석
-                    for (let i = lastResultIndex; i < event.results.length; ++i) {
+                    // 가장 최신의 결과 인덱스부터 처리하여 버퍼 중복 방지
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
                         const transcript = event.results[i][0].transcript.trim();
                         const cleanText = transcript.replace(/[\s\.\?!]/g, "");
                         
                         document.getElementById('interim-display').innerText = transcript;
 
-                        // 1. 측정 중일 때 -> 칭찬어 탐색 (T1 기록)
                         if (currentState === APP_STATE.MEASURING) {
+                            // 1. 측정 중일 때 -> 칭찬어 탐색 (T1 마감)
                             if (praise_db.some(p => cleanText.includes(p.replace(/[\s\.\?!]/g, "")))) {
-                                lastResultIndex = i + 1; // 칭찬어 세그먼트까지 처리 완료로 마킹
-                                completeLog("자동인식");
-                                return;
+                                completeLog("자동");
+                                break;
                             }
-                        } 
-                        // 2. 대기 중일 때 -> 지시어 탐색 (T0 시작)
-                        else if (currentState === APP_STATE.READY) {
+                        } else {
+                            // 2. 대기 중일 때 -> 지시어 탐색 (T0 시작)
                             for (let key in instruction_db) {
                                 if (cleanText.includes(key.replace(/[\s\.\?!]/g, ""))) {
-                                    lastResultIndex = i + 1; // 지시어 세그먼트까지 처리 완료로 마킹
                                     startMeasuring(key, instruction_db[key]);
-                                    return;
+                                    break;
                                 }
                             }
                         }
@@ -200,7 +196,9 @@
         }
 
         function startMeasuring(word, emoji) {
+            if (currentState === APP_STATE.MEASURING) return;
             currentState = APP_STATE.MEASURING;
+            
             currentLog = { student: studentName, keyword: word, startTime: Date.now() };
             
             document.getElementById('main-word').innerText = word;
@@ -208,8 +206,7 @@
             document.getElementById('val-activity').innerText = "⏱️ 측정 중";
             
             const card = document.getElementById('main-card');
-            card.style.animation = 'none'; card.offsetHeight;
-            card.style.animation = 'popIn 0.5s forwards';
+            card.style.animation = 'none'; card.offsetHeight; card.style.animation = 'popIn 0.5s forwards';
             
             cancelAnimationFrame(animationFrameId);
             runTimer();
@@ -221,20 +218,19 @@
             const now = Date.now();
             const elapsed = now - currentLog.startTime;
             const remaining = (targetDelay * 1000) - elapsed;
-            const progress = Math.max(0, (remaining / (targetDelay * 1000)) * 100);
-
-            bar.style.width = progress + '%';
+            const progress = (remaining / (targetDelay * 1000)) * 100;
 
             if (progress <= 0) {
+                bar.style.width = '0%';
                 handleTimeout();
             } else {
+                bar.style.width = progress + '%';
                 animationFrameId = requestAnimationFrame(runTimer);
             }
         }
 
         function completeLog(method) {
             if (currentState !== APP_STATE.MEASURING) return;
-            currentState = APP_STATE.SUCCESS;
             
             const latency = ((Date.now() - currentLog.startTime) / 1000).toFixed(1);
             logs.push({
@@ -248,13 +244,11 @@
             bar.classList.add('recorded');
             bar.style.width = '100%';
             
-            setTimeout(resetToReady, 1000);
+            resetToReady(); 
         }
 
         function handleTimeout() {
             if (currentState !== APP_STATE.MEASURING) return;
-            currentState = APP_STATE.SUCCESS;
-
             logs.push({
                 student: studentName, time: new Date().toLocaleTimeString(),
                 keyword: currentLog.keyword, latency: targetDelay.toFixed(1), result: "타임아웃", method: "자동"
@@ -265,7 +259,7 @@
         }
 
         function resetToReady() {
-            isMeasuring = false;
+            currentState = APP_STATE.READY;
             currentLog = null;
             document.getElementById('main-word').innerText = "다음 지시 준비";
             document.getElementById('main-emoji').innerText = "👂";
@@ -274,7 +268,6 @@
             const bar = document.getElementById('p-bar');
             bar.style.width = '0%';
             bar.classList.remove('recorded');
-            currentState = APP_STATE.READY;
         }
 
         function handleManualRecord() { if (currentState === APP_STATE.MEASURING) completeLog("수동"); }
@@ -284,7 +277,6 @@
             if (!isListening) {
                 try {
                     isListening = true;
-                    lastResultIndex = 0; 
                     recognition.start();
                     btn.innerText = "⏹️ 수업 중지"; btn.classList.add('active');
                     document.getElementById('interim-display').innerText = "지시를 기다리는 중...";
