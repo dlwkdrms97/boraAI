@@ -3,324 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BORA (보라) - 특수교육 현장 수업 어시스턴트 [Master V23]</title>
+    <title>BORA v2.1 Research Edition - Integrity Verified</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #38bdf8;
-            --text-main: #f8fafc;
-            --text-sub: #94a3b8;
-            --highlight: #fbbf24;
-            --progress-color: #10b981;
-            --success-blue: #3b82f6;
-            --error-red: #ef4444;
+            --bg-color: #0A0A0A;
+            --surface-color: #1A1A1A;
+            --primary-yellow: #FFD700;
+            --primary-cyan: #00E5FF;
+            --text-main: #FFFFFF;
+            --text-dim: #999999;
+            --danger: #FF3D00;
+            --success: #00E676;
         }
 
-        body { 
-            font-family: 'Pretendard', 'Malgun Gothic', sans-serif; 
-            background: var(--bg-color); color: var(--text-main); 
-            margin: 0; padding: 0; overflow: hidden; height: 100vh; 
-            display: flex; flex-direction: column; user-select: none;
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', 'Inter', sans-serif; }
+
+        body { background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+        header { padding: 1.2rem 2.5rem; background: var(--surface-color); display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--primary-cyan); }
+
+        .status-badge { padding: 0.6rem 1.2rem; border-radius: 30px; font-weight: 800; font-size: 0.85rem; letter-spacing: 0.5px; }
+        .status-idle { background: #333; color: var(--text-dim); }
+        .status-processing { background: var(--primary-yellow); color: #000; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+
+        #visual-card {
+            width: 85vw; max-width: 650px; aspect-ratio: 1/1; background: var(--surface-color); border-radius: 50px;
+            border: 10px solid var(--primary-yellow); display: none; flex-direction: column; justify-content: center;
+            align-items: center; text-align: center; box-shadow: 0 0 70px rgba(255, 215, 0, 0.15); z-index: 10;
         }
 
-        .status-bar { 
-            height: 15vh; background: var(--card-bg); 
-            display: flex; justify-content: space-around; align-items: center; 
-            border-bottom: 4px solid var(--accent); box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            position: relative; padding: 0 60px;
+        #visual-card.active { display: flex; animation: zoomIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        @keyframes zoomIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .emoji-display { font-size: 16rem; margin-bottom: 0.5rem; }
+        .word-display { font-size: 6rem; font-weight: 900; color: var(--primary-yellow); text-shadow: 2px 2px 10px rgba(0,0,0,0.5); }
+
+        #timer-container { width: 85vw; max-width: 650px; height: 25px; background: #222; border-radius: 15px; margin-top: 3rem; overflow: hidden; display: none; }
+        #timer-bar { width: 100%; height: 100%; background: linear-gradient(90deg, var(--primary-cyan), #00B0FF); transition: width 0.1s linear; }
+
+        #log-panel {
+            position: fixed; right: 0; top: 0; width: 350px; height: 100%; background: var(--surface-color);
+            border-left: 2px solid #333; padding: 2rem; transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.6);
         }
-        .status-item { text-align: center; flex: 1; border-right: 1px solid rgba(255,255,255,0.1); }
-        .status-item:last-child { border-right: none; }
-        .status-label { font-size: 1vw; color: var(--text-sub); margin-bottom: 5px; font-weight: bold; }
-        .status-value { font-size: clamp(18px, 2.2vw, 42px); font-weight: 900; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #log-panel.open { transform: translateX(0); }
 
-        .main-display { height: 50vh; display: flex; justify-content: center; align-items: center; padding: 2vh; box-sizing: border-box; }
-        .visual-card { 
-            background: var(--card-bg); border-radius: 40px; width: 100%; height: 100%; 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6); border: 8px solid var(--accent);
-            text-align: center; position: relative;
+        .log-item { padding: 1.2rem; border-bottom: 1px solid #333; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .fab-group { position: fixed; bottom: 2.5rem; right: 2.5rem; display: flex; flex-direction: column; gap: 1.2rem; z-index: 50; }
+        button {
+            width: 70px; height: 70px; border-radius: 50%; border: none; cursor: pointer;
+            background: var(--primary-cyan); color: #000; font-size: 1.8rem; box-shadow: 0 6px 25px rgba(0,0,0,0.5);
+            transition: all 0.2s;
         }
-        .big-emoji { font-size: 18vh; margin-bottom: 1vh; pointer-events: none; }
-        .keyword-text { font-size: 8vh; font-weight: 900; color: var(--highlight); text-shadow: 4px 4px 20px rgba(0,0,0,0.8); pointer-events: none; }
+        button:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(0,229,255,0.4); }
 
-        .notice-pop {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--success-blue); color: white; padding: 15px 40px;
-            border-radius: 50px; font-weight: bold; z-index: 5000; display: none;
-            font-size: 2vh; box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-
-        .controls { height: 35vh; background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; align-items: center; justify-content: space-evenly; border-top: 3px solid #334155; padding: 10px; }
-        .transcript-container { width: 95%; background: rgba(0,0,0,0.4); padding: 10px; border-radius: 20px; min-height: 6vh; display: flex; align-items: center; justify-content: center; border: 2px solid #475569; }
-        .interim-text { color: #fff; font-size: 3vh; font-weight: 800; text-align: center; min-height: 1.2em; }
-
-        .bottom-ui { width: 100%; display: flex; justify-content: center; align-items: center; gap: 15px; }
-        .config-area { display: flex; gap: 8px; }
-        .config-area input { background: #1e293b; border: 2px solid #334155; color: white; padding: 8px 12px; border-radius: 8px; font-size: 1.6vh; outline: none; }
-        .change-btn { background: var(--accent); border: none; border-radius: 8px; color: white; font-weight: bold; padding: 0 15px; cursor: pointer; font-size: 1.6vh; }
-
-        #recordBtn { padding: 1.2vh 4vw; font-size: 2.2vh; border-radius: 50px; border: none; background: var(--error-red); color: white; cursor: pointer; font-weight: 900; transition: 0.3s; }
-        #recordBtn.active { background: #10b981; }
-
-        .progress-container { position: absolute; bottom: 0; left: 0; width: 100%; height: 12px; background: rgba(255,255,255,0.1); }
-        .progress-bar { width: 0%; height: 100%; background: var(--progress-color); transition: none; }
-        .progress-bar.recorded { background: var(--success-blue) !important; width: 100% !important; }
-
-        .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.98); z-index: 2000; display: none; padding: 5vh 10vw; box-sizing: border-box; backdrop-filter: blur(10px); }
-        .overlay-content { background: var(--card-bg); border: 4px solid var(--accent); border-radius: 30px; padding: 4vh; height: 100%; overflow-y: auto; color: var(--text-main); }
-        
-        .icon-btn {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            background: rgba(255,255,255,0.05); border: 2px solid var(--text-sub); color: var(--text-sub);
-            width: 4.5vh; height: 4.5vh; border-radius: 50%; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; font-size: 2.2vh; transition: 0.3s;
-        }
-        .icon-btn:hover { background: var(--accent); color: white; border-color: var(--accent); }
-
-        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); display: none; justify-content: center; align-items: center; z-index: 200; }
+        .modal-content { background: var(--surface-color); padding: 3rem; border-radius: 40px; width: 95%; max-width: 500px; border: 2px solid #333; }
+        input { width: 100%; padding: 1.2rem; background: #252525; border: 2px solid #444; color: white; border-radius: 15px; font-size: 1.1rem; margin-top: 0.5rem; }
+        input:focus { border-color: var(--primary-cyan); outline: none; }
     </style>
 </head>
 <body>
-    <div id="noticePop" class="notice-pop">✨ 기록 완료</div>
 
-    <div class="status-bar">
-        <div class="status-item"><div class="status-label">학생 이름</div><div class="status-value" id="val-student">현00/송0</div></div>
-        <div class="status-item"><div class="status-label">과목</div><div class="status-value" id="val-subject">국어</div></div>
-        <div class="status-item"><div class="status-label">주제</div><div class="status-value" id="val-topic">준비 중</div></div>
-        <div class="status-item"><div class="status-label">상태</div><div class="status-value" id="val-activity" style="color: var(--highlight);">👂 지시 대기</div></div>
-        <button class="icon-btn" style="right: 20px;" onclick="toggleOverlay('settingsOverlay')">⚙️</button>
+    <header>
+        <div>
+            <h1 style="color: var(--primary-cyan); font-size: 1.8rem;">BORA <span style="font-size: 0.9rem; color: var(--text-dim); font-weight: 400;">v2.1 Integrity Edition</span></h1>
+            <p id="info-display" style="font-size: 0.9rem; color: var(--text-dim); margin-top: 4px;">준비됨</p>
+        </div>
+        <div id="engine-status" class="status-badge status-idle">IDLE: 지시 대기</div>
+    </header>
+
+    <main>
+        <div id="visual-card">
+            <div id="card-emoji" class="emoji-display"></div>
+            <div id="card-word" class="word-display"></div>
+        </div>
+        <div id="timer-container"><div id="timer-bar"></div></div>
+        <p id="transcript-preview" style="position:absolute; bottom: 8rem; color: #444; font-size: 1rem;"></p>
+    </main>
+
+    <div id="log-panel">
+        <h2 style="margin-bottom: 2rem;">연구 데이터 센터</h2>
+        <div id="log-container" style="height: calc(100% - 150px); overflow-y: auto; background: #111; border-radius: 20px;"></div>
+        <button onclick="exportCSV()" style="width: 100%; border-radius: 15px; margin-top: 1.5rem; font-size: 1rem; font-weight: bold; height: 55px;">📥 분석 데이터 추출 (CSV)</button>
     </div>
 
-    <div class="main-display">
-        <div class="visual-card" id="main-card" onclick="handleManualRecord()">
-            <div class="big-emoji" id="main-emoji">👂</div>
-            <div class="keyword-text" id="main-word">준비 완료</div>
-            <div class="progress-container"><div class="progress-bar" id="p-bar"></div></div>
-        </div>
+    <div class="fab-group">
+        <button onclick="toggleLogs()">📊</button>
+        <button onclick="openSettings()">⚙️</button>
     </div>
 
-    <div class="controls">
-        <div class="transcript-container">
-            <div class="interim-text" id="interim-display">버튼을 눌러 수업을 시작하세요</div>
-        </div>
-        
-        <div class="bottom-ui">
-            <div class="config-area">
-                <input type="text" id="subjectInput" placeholder="교과" style="width: 8vw;" value="국어">
-                <input type="text" id="topicInput" placeholder="주제" style="width: 15vw;">
-                <input type="number" id="delayInput" placeholder="초" style="width: 4vw;" min="1" value="10">
-                <button class="change-btn" onclick="updateUIContext()">변경</button>
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color: var(--primary-cyan); margin-bottom: 2rem;">연구 환경 설정</h2>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="color: #888;">대상 학생</label>
+                <input type="text" id="student-name" placeholder="학생 성함">
             </div>
-            <button id="recordBtn" onclick="toggleListening()">▶️ 수업 시작</button>
-        </div>
-    </div>
-
-    <div id="settingsOverlay" class="overlay">
-        <div class="overlay-content">
-            <h2 style="color:var(--accent);">⚙️ 시스템 설정</h2>
-            <label>학생 이름</label><br><input type="text" id="set-student-name" style="width:90%; padding:15px; margin:10px 0; background:#0f172a; border:1px solid var(--accent); color:white;"><br>
-            <div style="margin-top:30px; display:flex; gap:15px;">
-                <button onclick="saveSettings()" style="flex:1; padding:20px; background:var(--accent); border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">설정 저장</button>
-                <button onclick="exportCSV()" style="flex:1; padding:20px; background:#10b981; border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">📊 CSV 추출</button>
-                <button onclick="toggleOverlay('settingsOverlay')" style="flex:1; padding:20px; background:#475569; border:none; border-radius:10px; color:white; font-weight:bold; cursor:pointer;">닫기</button>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="color: #888;">연구 과제</label>
+                <input type="text" id="subject-topic" placeholder="예: 언어 지원 - 행동 지시">
             </div>
-            <button onclick="clearLogs()" style="margin-top:30px; width:100%; padding:10px; background:var(--error-red); border:none; color:white; cursor:pointer; width:100%;">⚠️ 모든 데이터 삭제</button>
+            <div style="margin-bottom: 2rem;">
+                <label style="color: #888;">목표 대기 시간 (초)</label>
+                <input type="number" id="target-delay" value="10">
+            </div>
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="saveSettings()" style="flex: 2; border-radius: 15px; font-size: 1rem; height: 55px;">저장 및 시작</button>
+                <button onclick="closeSettings()" style="flex: 1; border-radius: 15px; font-size: 1rem; height: 55px; background: #333; color: white;">닫기</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const instruction_db = {
-            "앉으세요": "🪑", "일어나세요": "🧍", "제자리": "🔙", "허리펴기": "🧘", "정면보기": "👁️",
-            "책상정리": "🧹", "가방놓기": "🎒", "의자당기기": "🪑", "필통꺼내기": "✏️", "책꺼내기": "📚",
-            "준비물확인": "🎒", "교과서펴기": "📖", "공책펴기": "📝", "날짜쓰기": "📅", "이름쓰기": "👤",
-            "바른자세": "🧘", "손무릎": "👐", "발모으기": "🦶", "심호흡": "🌬️", "미소짓기": "😊",
-            "여기보세요": "🎯", "칠판보세요": "👨‍🏫", "선생님보세요": "👩‍🏫", "화면보세요": "🖥️", "나를봐요": "👁️",
-            "주목": "📢", "집중하세요": "🎯", "눈맞춤": "👁️", "손가락집중": "☝️", "불끄기": "💡",
-            "그림보세요": "🖼️", "글자보세요": "🔤", "가리키기": "☝️", "밑줄보세요": "〰️", "색깔확인": "🎨",
-            "눈크게": "👀", "깜빡이지않기": "👁️", "고개돌리기": "🔄", "지시봉보기": "🦯", "화살표보기": "➡️",
-            "연필잡기": "✏️", "글씨쓰기": "✍️", "줄긋기": "📏", "동그라미": "⭕", "색칠하기": "🖍️",
-            "가위질": "✂️", "풀칠하기": "🧴", "붙이기": "📋", "오리기": "✂️", "접기": "📄",
-            "번호매기기": "1️⃣", "단어찾기": "🔍", "선잇기": "🔗", "빈칸채우기": "📥", "스티커붙이기": "✨",
-            "넘기기": "📑", "덮기": "📕", "카드고르기": "🃏", "버튼누르기": "🔘", "마우스클릭": "🖱️",
-            "키보드입력": "⌨️", "태블릿켜기": "📱", "탭하기": "👆", "드래그": "🖱️", "확대하기": "🔍",
-            "들으세요": "👂", "말하세요": "🗣️", "따라하기": "🗣️", "큰소리로": "📢", "또박또박": "🗣️",
-            "손들기": "🙋", "발표하기": "🙋", "대답하기": "💬", "질문하기": "❓", "도움요청": "🆘",
-            "친구랑인사": "🤝", "하이파이브": "🙌", "박수세번": "👏", "고개끄덕": "🙆", "손흔들기": "👋",
-            "조용히": "🤫", "기다려요": "⏳", "멈추세요": "🛑", "차례지키기": "🚶", "줄서기": "🚶",
-            "천천히하기": "🐢", "다시하기": "🔄", "끝까지하기": "🏁", "포기하지않기": "💪", "쉬는시간": "⏰",
-            "뒷정리": "🧹", "쓰레기줍기": "🗑️", "가방싸기": "🎒", "인사하고가기": "🙇", "인사합시다": "🙇"
+        // 무결성 지시어 DB 100선 (행동 중심 핵심어 추출)
+        const activity_keywords = {
+            "앉으세요": "🪑", "일어나세요": "🧍", "기다리세요": "⏳", "보세요": "👀", "들으세요": "👂",
+            "멈추세요": "✋", "정리하세요": "🧹", "가져오세요": "📥", "넣으세요": "🗳️", "주세요": "🤲",
+            "손드세요": "✋", "손내리세요": "👇", "박수치세요": "👏", "인사하세요": "🙇", "정렬하세요": "🚶",
+            "줄서세요": "🚶", "청소하세요": "🧹", "닦으세요": "🧽", "버리세요": "🗑️", "펼치세요": "📖",
+            "덮으세요": "📕", "쓰세요": "✍️", "그리세요": "🎨", "칠하세요": "🖍️", "오리세요": "✂️",
+            "붙이세요": "🩹", "접으세요": "📂", "찢으세요": "🚫", "누르세요": "🔘", "당기세요": "🏹",
+            "미세요": "🚪", "여세요": "🔓", "닫으세요": "🔒", "켜세요": "💡", "끄세요": "🌑",
+            "입으세요": "👕", "벗으세요": "🩳", "신으세요": "👟", "마시세요": "💧", "드세요": "🍱",
+            "웃으세요": "😄", "참으세요": "🤫", "말하세요": "🗣️", "노래하세요": "🎤", "춤추세요": "💃",
+            "앉아": "🪑", "일어나": "🧍", "봐": "👀", "기다려": "⏳", "들어": "👂", "멈춰": "✋",
+            "정리해": "🧹", "가져와": "📥", "넣어": "🗳️", "줘": "🤲", "손들어": "✋", "손내려": "👇",
+            "박수": "👏", "인사해": "🙇", "줄서": "🚶", "청소해": "🧹", "닦아": "🧽", "버려": "🗑️",
+            "펴": "📖", "덮어": "📕", "써": "✍️", "그려": "🎨", "칠해": "🖍️", "오려": "✂️",
+            "붙여": "🩹", "접어": "📂", "찢어": "🚫", "눌러": "🔘", "당겨": "🏹", "밀어": "🚪",
+            "열어": "🔓", "닫아": "🔒", "켜": "💡", "꺼": "🌑", "입어": "👕", "벗어": "🩳",
+            "신어": "👟", "마셔": "💧", "먹어": "🍱", "웃어": "😄", "참아": "🤫", "말해": "🗣️",
+            "노래해": "🎤", "춤춰": "💃", "선생님보세요": "🧑‍🏫", "칠판보세요": "🖍️", "친구보세요": "🤝"
         };
-        const praise_db = ["잘했어", "잘했어요", "좋아", "좋아요", "최고", "그렇지", "맞아", "성공", "훌륭해", "정답", "딩동댕", "그래", "오케이", "최고야"];
 
-        const APP_STATE = { READY: 'ready', MEASURING: 'measuring', SUCCESS: 'success' };
-        let currentState = APP_STATE.READY;
+        const positive_words = ["잘했어", "잘했어요", "좋아요", "그래", "좋아", "성공", "최고", "맞아", "통과", "훌륭해", "딩동댕"];
 
-        let isListening = false;
-        let studentName = "현00/송0", currentSubject = "국어", currentTopic = "준비 중", targetDelay = 10;
-        let recognition, animationFrameId, currentLog = null, logs = [];
+        let isProcessing = false;
+        let recognition;
+        let timerInterval;
+        let startTime;
+        let currentCommand = "";
+        let lastVisualUpdate = 0;
+        let logs = JSON.parse(localStorage.getItem('bora_v2_1_integrity') || '[]');
 
-        function init() {
-            const saved = JSON.parse(localStorage.getItem('bora_settings_v21') || '{}');
-            studentName = saved.name || "현00/송0";
-            logs = JSON.parse(localStorage.getItem('bora_research_logs_v21') || '[]');
-            document.getElementById('val-student').innerText = studentName;
-            setupRecognition();
-        }
-
-        function setupRecognition() {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (!SpeechRecognition) return alert("음성 인식을 지원하지 않는 브라우저입니다.");
-
+        function initSpeech() {
+            window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
+            recognition.continuous = true;
             recognition.lang = 'ko-KR';
-            recognition.continuous = false; // [핵심] 단답형 모드로 버퍼 꼬임 방지
-            recognition.interimResults = true;
 
             recognition.onresult = (event) => {
-                if (currentState === APP_STATE.SUCCESS) return;
-
-                const text = event.results[0][0].transcript.trim();
-                const cleanText = text.replace(/\s/g, "");
-                
-                document.getElementById('interim-display').innerText = text;
-
-                if (currentState === APP_STATE.MEASURING) {
-                    // 측정 중일 때: 오직 칭찬어만 필사적으로 찾음
-                    if (praise_db.some(p => cleanText.includes(p.replace(/\s/g, "")))) {
-                        completeLog("자동");
-                    }
-                } else if (currentState === APP_STATE.READY) {
-                    // 대기 중일 때: 100대 지시어 탐색
-                    for (let key in instruction_db) {
-                        if (cleanText.includes(key)) {
-                            startMeasuring(key, instruction_db[key]);
-                            break;
-                        }
-                    }
-                }
+                const transcript = event.results[event.results.length - 1][0].transcript.trim().replace(/\s/g, '');
+                document.getElementById('transcript-preview').innerText = `인식: ${transcript}`;
+                processVoice(transcript);
             };
 
-            recognition.onend = () => {
-                // 한 문장이 끝나면 0.01초 만에 즉시 마이크를 다시 깨움
-                if (isListening) {
-                    setTimeout(() => {
-                        try { recognition.start(); } catch(e){}
-                    }, 10);
+            recognition.onend = () => setTimeout(() => { try { recognition.start(); } catch(e) {} }, 300);
+            recognition.start();
+        }
+
+        function processVoice(text) {
+            const now = Date.now();
+            if (!isProcessing) {
+                if (now - lastVisualUpdate < 2000) return;
+                const keys = Object.keys(activity_keywords).sort((a,b) => b.length - a.length);
+                for (let k of keys) {
+                    if (text.includes(k)) { triggerSystem(k); return; }
                 }
-            };
-        }
-
-        function startMeasuring(word, emoji) {
-            if (currentState === APP_STATE.MEASURING) return;
-            currentState = APP_STATE.MEASURING;
-            
-            currentLog = { student: studentName, subject: currentSubject, topic: currentTopic, keyword: word, startTime: Date.now() };
-            
-            document.getElementById('main-word').innerText = word;
-            document.getElementById('main-emoji').innerText = emoji;
-            document.getElementById('val-activity').innerText = "⏱️ 수업 중";
-            
-            const card = document.getElementById('main-card');
-            card.style.animation = 'none'; card.offsetHeight; card.style.animation = 'popIn 0.5s forwards';
-            
-            cancelAnimationFrame(animationFrameId);
-            runTimer();
-        }
-
-        function runTimer() {
-            if (currentState !== APP_STATE.MEASURING) return;
-            const elapsed = Date.now() - currentLog.startTime;
-            const progress = Math.max(0, (1 - (elapsed / (targetDelay * 1000))) * 100);
-            document.getElementById('p-bar').style.width = progress + '%';
-            if (progress <= 0) handleTimeout();
-            else animationFrameId = requestAnimationFrame(runTimer);
-        }
-
-        function completeLog(method) {
-            if (currentState !== APP_STATE.MEASURING) return;
-            currentState = APP_STATE.SUCCESS; // 성공 즉시 다른 인식 잠금
-            
-            const latency = ((Date.now() - currentLog.startTime) / 1000).toFixed(1);
-            logs.push({ student: studentName, subject: currentSubject, topic: currentTopic, time: new Date().toLocaleTimeString(), keyword: currentLog.keyword, latency: latency, result: "성공", method: method });
-            localStorage.setItem('bora_research_logs_v21', JSON.stringify(logs));
-            
-            showNotice(`✨ ${latency}초 기록 완료`);
-            document.getElementById('p-bar').classList.add('recorded');
-            document.getElementById('p-bar').style.width = '100%';
-            
-            setTimeout(resetToReady, 500); 
-        }
-
-        function handleTimeout() {
-            if (currentState !== APP_STATE.MEASURING) return;
-            currentState = APP_STATE.SUCCESS;
-            logs.push({ student: studentName, subject: currentSubject, topic: currentTopic, time: new Date().toLocaleTimeString(), keyword: currentLog.keyword, latency: targetDelay.toFixed(1), result: "타임아웃", method: "자동" });
-            localStorage.setItem('bora_research_logs_v21', JSON.stringify(logs));
-            showNotice(`⏰ 시간 초과`);
-            resetToReady();
-        }
-
-        function resetToReady() {
-            currentState = APP_STATE.READY;
-            currentLog = null;
-            document.getElementById('main-word').innerText = "준비 완료";
-            document.getElementById('main-emoji').innerText = "👂";
-            document.getElementById('val-activity').innerText = "지시 대기";
-            document.getElementById('interim-display').innerText = "";
-            const bar = document.getElementById('p-bar');
-            bar.style.width = '0%';
-            bar.classList.remove('recorded');
-        }
-
-        function handleManualRecord() { if (currentState === APP_STATE.MEASURING) completeLog("수동"); }
-
-        function toggleListening() {
-            const btn = document.getElementById('recordBtn');
-            if (!isListening) {
-                isListening = true; recognition.start();
-                btn.innerText = "⏹️ 수업 중지"; btn.classList.add('active');
-                document.getElementById('interim-display').innerText = "지시를 기다리는 중...";
             } else {
-                isListening = false; recognition.stop();
-                btn.innerText = "▶️ 수업 시작"; btn.classList.remove('active');
+                for (let p of positive_words) {
+                    if (text.includes(p)) { finalizeLog(true); return; }
+                }
             }
         }
 
-        function updateUIContext() {
-            currentSubject = document.getElementById('subjectInput').value || "국어";
-            currentTopic = document.getElementById('topicInput').value || "준비 중";
-            targetDelay = parseInt(document.getElementById('delayInput').value) || 10;
-            document.getElementById('val-subject').innerText = currentSubject;
-            document.getElementById('val-topic').innerText = currentTopic;
-            document.getElementById('val-delay').innerText = targetDelay + "초";
-            alert('수업 정보가 적용되었습니다.');
+        function triggerSystem(cmd) {
+            isProcessing = true;
+            currentCommand = cmd;
+            startTime = Date.now();
+            lastVisualUpdate = Date.now();
+
+            const status = document.getElementById('engine-status');
+            status.innerText = "LOCK: 관찰 중";
+            status.className = "status-badge status-processing";
+            
+            document.getElementById('card-emoji').innerText = activity_keywords[cmd];
+            document.getElementById('card-word').innerText = cmd;
+            document.getElementById('visual-card').classList.add('active');
+            document.getElementById('timer-container').style.display = 'block';
+
+            let timeLeft = 100;
+            let limit = parseInt(localStorage.getItem('bora_target_delay') || '10');
+            timerInterval = setInterval(() => {
+                timeLeft -= (10 / limit);
+                document.getElementById('timer-bar').style.width = timeLeft + "%";
+                if (timeLeft <= 0) finalizeLog(false);
+            }, 100);
         }
 
-        function showNotice(msg) {
-            const n = document.getElementById('noticePop');
-            n.innerText = msg; n.style.display = 'block';
-            setTimeout(() => n.style.display = 'none', 1500);
+        function finalizeLog(isSuccess) {
+            clearInterval(timerInterval);
+            const endTime = Date.now();
+            const delay = ((endTime - startTime) / 1000).toFixed(2);
+            
+            logs.unshift({
+                time: new Date().toLocaleString(),
+                student: localStorage.getItem('bora_student') || '미설정',
+                subject: localStorage.getItem('bora_subject') || '일반',
+                cmd: currentCommand,
+                delay: isSuccess ? delay : "시간초과",
+                status: isSuccess ? "성공" : "미수행"
+            });
+            localStorage.setItem('bora_v2_1_integrity', JSON.stringify(logs));
+            renderLogs();
+            resetSystem();
         }
 
-        function toggleOverlay(id) { document.getElementById(id).style.display = (document.getElementById(id).style.display === 'block') ? 'none' : 'block'; }
+        function resetSystem() {
+            isProcessing = false;
+            document.getElementById('visual-card').classList.remove('active');
+            document.getElementById('timer-container').style.display = 'none';
+            document.getElementById('engine-status').innerText = "IDLE: 지시 대기";
+            document.getElementById('engine-status').className = "status-badge status-idle";
+            lastVisualUpdate = Date.now();
+        }
 
-        function saveSettings() {
-            localStorage.setItem('bora_settings_v21', JSON.stringify({name: document.getElementById('set-student-name').value || "현00/송0"}));
-            location.reload();
+        function renderLogs() {
+            document.getElementById('log-container').innerHTML = logs.map(l => `
+                <div class="log-item">
+                    <div style="display:flex; justify-content:space-between; font-weight:bold;">
+                        <span style="color:var(--primary-cyan)">${l.cmd}</span>
+                        <span style="color:${l.status === '성공' ? 'var(--success)' : 'var(--danger)'}">${l.status}</span>
+                    </div>
+                    <div style="font-size:0.75rem; color:#666; margin:4px 0;">${l.time}</div>
+                    <div style="font-size:0.85rem;">지연 시간: ${l.delay}s</div>
+                </div>
+            `).join('');
         }
 
         function exportCSV() {
-            if (logs.length === 0) return alert("기록된 데이터가 없습니다.");
-            let csv = "\uFEFF회기,학생명,교과,주제,시간,지시어,지연시간(초),결과,방식\n";
-            logs.forEach((l, idx) => { csv += `${idx+1},${l.student},${l.subject},${l.topic},${l.time},${l.keyword},${l.latency},${l.result},${l.method}\n`; });
-            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
-            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `BORA_최종데이터.csv`; a.click();
+            const head = ["일시", "학생", "연구과제", "지시어", "지연시간(초)", "상태"];
+            const rows = logs.map(l => [l.time, l.student, l.subject, l.cmd, l.delay, l.status]);
+            const csv = "\ufeff" + head.join(",") + "\n" + rows.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = `BORA_Integrity_Data_${new Date().toLocaleDateString()}.csv`;
+            a.click();
         }
 
-        function clearLogs() { if(confirm("데이터를 삭제할까요?")) { localStorage.clear(); location.reload(); } }
-        window.onload = init;
+        function toggleLogs() { document.getElementById('log-panel').classList.toggle('open'); }
+        function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; }
+        function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+        function saveSettings() {
+            localStorage.setItem('bora_student', document.getElementById('student-name').value);
+            localStorage.setItem('bora_subject', document.getElementById('subject-topic').value);
+            localStorage.setItem('bora_target_delay', document.getElementById('target-delay').value);
+            updateInfo(); closeSettings();
+        }
+        function updateInfo() {
+            const s = localStorage.getItem('bora_student') || '미설정';
+            const j = localStorage.getItem('bora_subject') || '일반';
+            document.getElementById('info-display').innerText = `학생: ${s} | 과제: ${j}`;
+        }
+
+        window.onload = () => { initSpeech(); renderLogs(); updateInfo(); };
     </script>
 </body>
 </html>
