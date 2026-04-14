@@ -11,12 +11,23 @@
             --primary-yellow: #FFD700;
             --primary-cyan: #00E5FF;
             --text-main: #FFFFFF;
-            --text-dim: #444444;
+            --text-dim: #888888;
             --danger: #FF3D00;
             --success: #00E676;
+            --border-color: #222222;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; }
+        body.light-mode {
+            --bg-color: #F0F2F5;
+            --surface-color: #FFFFFF;
+            --primary-yellow: #F57F17;
+            --primary-cyan: #006064;
+            --text-main: #1A1A1B;
+            --text-dim: #5F6368;
+            --border-color: #DCDFE6;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Pretendard', sans-serif; transition: background-color 0.2s, color 0.2s, border-color 0.2s; }
 
         body { background-color: var(--bg-color); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
@@ -24,40 +35,43 @@
             padding: 1.5rem 4rem; background: var(--surface-color); 
             display: flex; justify-content: space-between; align-items: center;
             border-bottom: 4px solid var(--primary-cyan); z-index: 100;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .header-info-bar { display: flex; flex: 1; justify-content: space-around; gap: 40px; }
         .info-item { display: flex; flex-direction: column; align-items: center; min-width: 0; flex: 1; }
         .info-label { font-size: 0.9rem; color: var(--primary-cyan); font-weight: 900; margin-bottom: 5px; }
-        .info-value { font-size: 1.8rem; font-weight: 900; color: #fff; width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .info-value { font-size: 1.8rem; font-weight: 900; color: var(--text-main); width: 100%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; padding-top: 10px; }
 
         #side-summary {
             position: fixed; left: 30px; top: 120px; width: 220px;
-            background: rgba(255,255,255,0.03); border-radius: 35px;
-            padding: 20px; border: 1px solid #222; z-index: 100;
+            background: var(--surface-color); border-radius: 35px;
+            padding: 25px; border: 1px solid var(--border-color); z-index: 100;
             backdrop-filter: blur(10px); max-height: 70vh; overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
-        .summary-title { color: var(--primary-cyan); font-size: 0.85rem; font-weight: 900; margin-bottom: 15px; border-bottom: 1px solid #333; padding-bottom: 8px; text-align: center; }
-        .sm-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #111; padding: 8px 0; }
-        .sm-word { font-size: 0.95rem; font-weight: 900; color: #fff; }
-        .sm-count { font-size: 0.85rem; color: var(--primary-yellow); font-weight: 900; }
+        .summary-title { color: var(--primary-cyan); font-size: 0.9rem; font-weight: 900; margin-bottom: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; text-align: center; }
+        .sm-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 10px 0; }
+        .sm-word { font-size: 1rem; font-weight: 900; color: var(--text-main) !important; }
+        .sm-count { font-size: 0.9rem; color: var(--primary-yellow); font-weight: 900; }
 
         #display-station {
             width: 90vw; max-width: 900px; height: 55vh;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             border-radius: 60px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 5px dashed #222; overflow: hidden; position: relative;
+            border: 5px dashed var(--border-color); overflow: hidden; position: relative;
+            background: var(--surface-color);
         }
 
         #display-station.active {
-            background: #0a0a0a;
+            background: var(--surface-color);
             border: 15px solid var(--primary-yellow);
-            box-shadow: 0 0 150px rgba(255, 215, 0, 0.25);
+            box-shadow: 0 0 150px rgba(255, 215, 0, 0.15);
         }
 
-        .idle-msg { font-size: 2.2rem; color: #333; font-weight: 900; text-align: center; }
+        .idle-msg { font-size: 2.2rem; color: var(--text-dim); font-weight: 900; text-align: center; }
         
         #card-content { display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; height: 100%; padding: 40px; }
         #card-content.show { display: flex; animation: cardIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
@@ -72,39 +86,39 @@
         footer {
             position: fixed; bottom: 0; width: 100%; height: 120px;
             display: flex; justify-content: center; align-items: center;
-            background: linear-gradient(transparent, rgba(0,0,0,0.9)); z-index: 200;
+            background: linear-gradient(transparent, var(--bg-color)); z-index: 200;
         }
 
         .btn-main {
             padding: 1rem 4rem; font-size: 1.8rem; font-weight: 900; border-radius: 100px;
             border: none; cursor: pointer; transition: all 0.2s;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
         }
-        .btn-start { background: var(--primary-cyan); color: #000; }
+        .btn-start { background: var(--primary-cyan); color: #fff; }
         .btn-stop { background: var(--danger); color: #fff; }
 
         .fab { position: fixed; bottom: 30px; right: 30px; display: flex; gap: 15px; z-index: 400; }
-        .btn-fab { width: 65px; height: 65px; border-radius: 50%; border: 2px solid #333; background: #111; color: var(--primary-cyan); font-size: 1.8rem; cursor: pointer; }
+        .btn-fab { width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--border-color); background: var(--surface-color); color: var(--primary-cyan); font-size: 1.8rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 
-        #log-panel { position: fixed; right: 0; top: 0; width: 450px; height: 100%; background: var(--surface-color); border-left: 2px solid #333; padding: 2rem; transform: translateX(100%); transition: transform 0.4s ease; z-index: 300; display: flex; flex-direction: column; }
+        #log-panel { position: fixed; right: 0; top: 0; width: 450px; height: 100%; background: var(--surface-color); border-left: 2px solid var(--border-color); padding: 2rem; transform: translateX(100%); transition: transform 0.4s ease; z-index: 300; display: flex; flex-direction: column; }
         #log-panel.open { transform: translateX(0); }
-        .log-list { flex: 1; overflow-y: auto; background: #000; border-radius: 20px; padding: 15px; border: 1px solid #222; }
-        .log-item { padding: 1rem; border-bottom: 1px solid #222; font-size: 0.95rem; }
+        .log-list { flex: 1; overflow-y: auto; background: var(--bg-color); border-radius: 20px; padding: 15px; border: 1px solid var(--border-color); }
+        .log-item { padding: 1rem; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; color: var(--text-main); }
 
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); display: none; justify-content: center; align-items: center; z-index: 500; padding: 20px; }
-        .modal-content { background: var(--surface-color); padding: 3rem; border-radius: 45px; width: 100%; max-width: 700px; border: 1px solid #333; max-height: 90vh; overflow-y: auto; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 500; padding: 20px; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--surface-color); padding: 3rem; border-radius: 45px; width: 100%; max-width: 700px; border: 1px solid var(--border-color); max-height: 90vh; overflow-y: auto; color: var(--text-main); }
         .modal-content h2 { color: var(--primary-cyan); font-size: 2rem; margin-bottom: 2rem; }
-        input, select { width: 100%; padding: 1.2rem; background: #222; border: 2px solid #444; color: #fff; border-radius: 15px; font-size: 1.2rem; margin-bottom: 1.2rem; }
+        input, select { width: 100%; padding: 1.2rem; background: var(--bg-color); border: 2px solid var(--border-color); color: var(--text-main); border-radius: 15px; font-size: 1.2rem; margin-bottom: 1.2rem; }
         
-        .keyword-form { background: #1a1a1a; padding: 20px; border-radius: 20px; margin-bottom: 2rem; border: 1px solid #333; }
-        .keyword-list-edit { margin-top: 1rem; border-top: 1px solid #333; padding-top: 1rem; }
-        .kw-item { display: flex; justify-content: space-between; align-items: center; background: #222; padding: 10px 20px; border-radius: 10px; margin-bottom: 8px; }
+        .keyword-form { background: var(--bg-color); padding: 20px; border-radius: 20px; margin-bottom: 2rem; border: 1px solid var(--border-color); }
+        .keyword-list-edit { margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem; }
+        .kw-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-color); padding: 10px 20px; border-radius: 10px; margin-bottom: 8px; border: 1px solid var(--border-color); }
         .btn-small-del { background: var(--danger); color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
 
         #timer-wrap { 
-            width: 80%; height: 20px; background: #222; border-radius: 10px; 
+            width: 80%; height: 20px; background: var(--bg-color); border-radius: 10px; 
             margin-top: 30px; visibility: hidden; overflow: hidden; 
-            border: 2px solid #333; position: relative; z-index: 150;
+            border: 2px solid var(--border-color); position: relative; z-index: 150;
         }
         #timer-fill { 
             height: 100%; background: var(--primary-yellow); width: 100%; 
@@ -115,21 +129,21 @@
 <body>
 
     <header>
-        <div style="font-weight: 900; color: #333; font-size: 1.2rem; width: auto; white-space: nowrap;">행동, 관찰, 반응을 보고 성취하자 '보라AI'</div>
+        <div style="font-weight: 900; color: var(--text-main); font-size: 1.2rem; width: auto; white-space: nowrap;">행동, 관찰, 반응을 보고 성취하자 '보라AI'</div>
         <div class="header-info-bar">
             <div class="info-item"><span class="info-label">대상 학생</span><span id="v-student" class="info-value">미입력</span></div>
             <div class="info-item"><span class="info-label">교과목</span><span id="v-subject" class="info-value">일반 수업</span></div>
             <div class="info-item"><span class="info-label">수업 내용</span><span id="v-content" class="info-value">기본 지시 측정</span></div>
-            <div class="info-item"><span class="info-label">촉구 단계</span><span id="v-fading" class="info-value">1단계 / 크기 1</span></div>
+            <div class="info-item"><span class="info-label">촉구 단계</span><span id="v-fading" class="info-value">전체 / 크기 1단계</span></div>
         </div>
-        <div id="engine-status" style="width: 120px; text-align: right; font-weight: 900; color: #333;">OFF</div>
+        <div id="engine-status" style="width: 120px; text-align: right; font-weight: 900; color: var(--text-dim);">OFF</div>
     </header>
 
     <main>
         <div id="side-summary">
             <div class="summary-title">📊 오늘 지시 요약</div>
             <div id="sm-list">
-                <div style="color: #444; font-size: 0.8rem; text-align: center; margin-top: 20px;">수업을 시작하면<br>요약이 표시됩니다.</div>
+                <div style="color: var(--text-dim); font-size: 0.8rem; text-align: center; margin-top: 20px;">수업을 시작하면<br>요약이 표시됩니다.</div>
             </div>
         </div>
 
@@ -142,7 +156,6 @@
             </div>
         </div>
 
-        <!-- 학생용 수행 완료 버튼 -->
         <button id="btn-done" onclick="finalize(true)" style="
             position: fixed; right: 50px; top: 50%; transform: translateY(-50%);
             width: 180px; height: 180px; border-radius: 50%;
@@ -162,11 +175,12 @@
         <button onclick="clearLogs()" style="width: 100%; padding: 1rem; border-radius: 15px; background: #331111; color: var(--danger); font-weight: 900; border: 1px solid var(--danger); cursor: pointer; margin-bottom: 1rem;">🧨 모든 데이터 로그 비우기</button>
         <div id="log-list" class="log-list"></div>
         <button onclick="downloadCSV()" style="width: 100%; padding: 1.2rem; border-radius: 15px; background: var(--primary-cyan); font-weight: 900; border: none; cursor: pointer; margin-top: 1rem;">📥 CSV 저장</button>
-        <button onclick="toggleLogs()" style="width: 100%; padding: 1rem; border-radius: 15px; background: #222; color: #fff; border: none; margin-top: 10px; cursor: pointer;">닫기</button>
+        <button onclick="toggleLogs()" style="width: 100%; padding: 1rem; border-radius: 15px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); margin-top: 10px; cursor: pointer;">닫기</button>
     </div>
 
     <div class="fab">
         <button class="btn-fab" onclick="openInstructions()" title="지시어 목록">📖</button>
+        <button id="btn-theme-toggle" class="btn-fab" onclick="toggleTheme()" title="테마 변경">🌙</button>
         <button class="btn-fab" onclick="openHelp()" title="도움말">❓</button>
         <button class="btn-fab" onclick="openSettings()" title="설정">⚙️</button>
         <button class="btn-fab" onclick="toggleLogs()" title="로그보기">📋</button>
@@ -174,29 +188,47 @@
 
     <div id="instructions-modal" class="modal">
         <div class="modal-content" style="max-width: 800px;">
-            <h2 style="color: var(--primary-cyan); border-bottom: 1px solid #333; padding-bottom: 15px; margin-bottom: 20px;">📜 전체 지시어 목록</h2>
-            <div id="all-instr-list" style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">
-                <!-- 카테고리별 지시어가 여기에 렌더링됩니다 -->
-            </div>
-            <button onclick="closeInstructions()" style="width: 100%; padding: 1.2rem; background: var(--primary-cyan); border: none; border-radius: 20px; font-weight: 900; font-size: 1.2rem; margin-top: 1.5rem; cursor: pointer;">닫기</button>
+            <h2 style="color: var(--primary-cyan); border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px;">📜 전체 지시어 목록</h2>
+            <div id="all-instr-list" style="max-height: 60vh; overflow-y: auto; padding-right: 10px;"></div>
+            <button onclick="closeInstructions()" style="width: 100%; padding: 1.2rem; background: var(--primary-cyan); border: none; border-radius: 20px; font-weight: 900; font-size: 1.2rem; margin-top: 1.5rem; cursor: pointer; color:#fff;">닫기</button>
         </div>
     </div>
 
     <div id="help-modal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <h2 style="color: var(--primary-cyan); text-align: center;">💡 보라AI 사용 가이드</h2>
-            <div style="line-height: 1.8; color: #ccc;">
-                <p style="margin-bottom: 1.5rem; border-bottom: 1px solid #333; padding-bottom: 10px;">
-                    <strong style="color: var(--primary-yellow);">BORA</strong>는 학생의 지시 따르기 행동을 시각적으로 지원하고 반응 시간을 측정하는 연구용 도구입니다.
+        <div class="modal-content" style="max-width: 650px;">
+            <h2 style="color: var(--primary-cyan); text-align: center;">💡 보라AI 완벽 활용 가이드</h2>
+            <div style="line-height: 1.6; color: var(--text-main); font-size: 0.95rem;">
+                <p style="margin-bottom: 1.2rem; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; text-align: center;">
+                    <strong style="color: var(--primary-yellow);">BORA</strong>는 시각적 촉구와 반응 시간 측정을 결합한 ABA 연구 도구입니다.
                 </p>
-                <h3 style="color: #fff; margin-bottom: 0.5rem;">1. 수업 시작하기</h3>
-                <p style="margin-left: 10px; margin-bottom: 1.5rem;">하단의 [수업 시작] 버튼을 누르고 마이크 권한을 허용해 주세요.</p>
-                <h3 style="color: #fff; margin-bottom: 0.5rem;">2. 지시어 발화</h3>
-                <p style="margin-left: 10px; margin-bottom: 1.5rem;">약속된 지시어를 말하면 화면에 <strong>대형 시각 카드</strong>가 나타납니다.</p>
-                <h3 style="color: #fff; margin-bottom: 0.5rem;">3. 강화 및 기록</h3>
-                <p style="margin-left: 10px; margin-bottom: 1.5rem;">학생이 지시에 따르면 <strong>"잘했어", "좋아"</strong>라고 말씀해 주세요. 즉시 데이터가 기록됩니다.</p>
+                
+                <h3 style="margin-bottom: 0.4rem;">1. 스마트한 기록 및 테마 전환</h3>
+                <p style="margin-left: 10px; margin-bottom: 1rem;">
+                    • <b>단축키:</b> 지시 카드가 떴을 때 <b>Enter</b> 또는 <b>Space</b> 키로 즉시 완료 기록이 가능합니다.<br>
+                    • <b>테마:</b> 우측 하단 🌙/☀️ 버튼으로 교실 환경에 맞는 <b>다크/라이트 모드</b>를 선택하세요.
+                </p>
+                
+                <h3 style="margin-bottom: 0.4rem;">2. 데이터 신뢰성 및 요약 확인</h3>
+                <p style="margin-left: 10px; margin-bottom: 1rem;">
+                    • <b>정밀 측정:</b> 지시 직후 0.8초간 음성 인식을 방어하여 <b>중복 트리거를 방지</b>하고 정확한 지연 시간만 기록합니다.<br>
+                    • <b>실시간 요약:</b> 좌측 <b>[오늘 지시 요약]</b>에서 지시어별 수행 횟수를 실시간으로 확인하세요.
+                </p>
+                
+                <h3 style="margin-bottom: 0.4rem;">3. ABA 촉구 용암법(Fading) 적용</h3>
+                <p style="margin-left: 10px; margin-bottom: 1rem;">설정에서 <b>촉구 단계</b>를 조절하세요. 학생의 습득도에 따라 [텍스트 제거]나 [크기 축소]를 적용하여 시각적 단서를 점진적으로 제거할 수 있습니다.</p>
+                
+                <h3 style="margin-bottom: 0.4rem;">4. 수업 종료 및 자동 저장</h3>
+                <p style="margin-left: 10px; margin-bottom: 1rem;">수업 종료 시 나타나는 팝업을 통해 <b>[학생이름_날짜]</b> 형태의 파일명으로 이번 세션 기록만 깔끔하게 별도 저장할 수 있습니다.</p>
+
+                <h3 style="margin-bottom: 0.4rem; color: var(--primary-yellow);">5. 마이크 권한 고정 (필수 설정)</h3>
+                <p style="margin-left: 10px; margin-bottom: 1rem;">
+                    10분마다 뜨는 권한 팝업을 없애려면: <br>
+                    • 주소창 왼쪽의 <b>[자물쇠]</b> 또는 <b>[설정]</b> 아이콘 클릭<br>
+                    • <b>마이크</b> 항목을 <b>'확인'</b>에서 <b>'허용'</b>으로 변경<br>
+                    • 이제 브라우저를 껐다 켜도 팝업 없이 바로 기록됩니다.
+                </p>
             </div>
-            <button onclick="closeHelp()" style="width: 100%; padding: 1.2rem; background: var(--primary-cyan); border: none; border-radius: 20px; font-weight: 900; font-size: 1.2rem; margin-top: 1rem; cursor: pointer;">확인했습니다</button>
+            <button onclick="closeHelp()" style="width: 100%; padding: 1.2rem; background: var(--primary-cyan); border: none; border-radius: 20px; font-weight: 900; font-size: 1.2rem; margin-top: 1rem; cursor: pointer; color:#fff;">확인했습니다</button>
         </div>
     </div>
 
@@ -209,11 +241,10 @@
             </div>
             <input type="text" id="i-content" placeholder="수업 주제">
             <input type="number" id="i-limit" value="10" placeholder="제한 시간(초)">
-
             <h3 style="color: var(--primary-yellow); margin: 1.5rem 0 1rem 0;">📉 ABA 촉구 용암법 설정</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #1a1a1a; padding: 20px; border-radius: 20px; border: 1px solid #333; margin-bottom: 1.5rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: var(--bg-color); padding: 20px; border-radius: 20px; border: 1px solid var(--border-color); margin-bottom: 1.5rem;">
                 <div>
-                    <label style="display: block; font-size: 0.8rem; color: #888; margin-bottom: 5px;">시각 단서 크기 (1-4단계)</label>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px;">시각 단서 크기 (1-4단계)</label>
                     <select id="i-fading-size">
                         <option value="1">1단계 (100%)</option>
                         <option value="2">2단계 (75%)</option>
@@ -222,7 +253,7 @@
                     </select>
                 </div>
                 <div>
-                    <label style="display: block; font-size: 0.8rem; color: #888; margin-bottom: 5px;">촉구 용암 모드</label>
+                    <label style="display: block; font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px;">촉구 용암 모드</label>
                     <select id="i-fading-mode">
                         <option value="1">1단계: 전체 (이모지+텍스트)</option>
                         <option value="2">2단계: 이모지 제거 (텍스트만)</option>
@@ -231,7 +262,6 @@
                     </select>
                 </div>
             </div>
-
             <h3 style="color: var(--primary-yellow); margin: 1.5rem 0 1rem 0;">➕ 커스텀 지시어 추가</h3>
             <div class="keyword-form">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
@@ -240,15 +270,13 @@
                 </div>
                 <input type="text" id="new-cat" placeholder="카테고리 (예: 의사소통)">
                 <input type="text" id="new-alias" placeholder="인식용 유사어 (쉼표분류: 박수쳐,박수치자)">
-                <button onclick="addNewKeyword()" style="width: 100%; padding: 1rem; background: var(--primary-cyan); border: none; border-radius: 10px; font-weight: 900; cursor: pointer;">지시어 등록하기</button>
+                <button onclick="addNewKeyword()" style="width: 100%; padding: 1rem; background: var(--primary-cyan); border: none; border-radius: 10px; font-weight: 900; cursor: pointer; color:#fff;">지시어 등록하기</button>
             </div>
-
-            <h3 style="color: #888; margin-bottom: 1rem;">현재 지시어 목록 (기본+커스텀)</h3>
+            <h3 style="color: var(--text-dim); margin-bottom: 1rem;">현재 지시어 목록 (기본+커스텀)</h3>
             <div id="custom-kw-list" class="keyword-list-edit"></div>
-
             <div style="display: flex; gap: 20px; margin-top: 2rem; position: sticky; bottom: 0; background: var(--surface-color); padding-top: 10px;">
-                <button onclick="saveSettings()" style="flex: 2; padding: 1.5rem; background: var(--primary-cyan); border: none; border-radius: 20px; font-weight: 900; font-size: 1.3rem;">모든 변경사항 저장</button>
-                <button onclick="closeSettings()" style="flex: 1; background: #333; color: #fff; border: none; border-radius: 20px; font-size: 1.3rem;">취소</button>
+                <button onclick="saveSettings()" style="flex: 2; padding: 1.5rem; background: var(--primary-cyan); border: none; border-radius: 20px; font-weight: 900; font-size: 1.3rem; color:#fff;">모든 변경사항 저장</button>
+                <button onclick="closeSettings()" style="flex: 1; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 20px; font-size: 1.3rem;">취소</button>
             </div>
         </div>
     </div>
@@ -355,7 +383,7 @@
             { w: "개인 공간을 지켜요", e: "📐", c: "자기관리", a: ["공간", "거리", "친구랑"] },
             { w: "눈이 아파요 말해요", e: "👁️", c: "건강관리", a: ["눈아파", "번쩍", "이상해"] },
             { w: "천천히 숨을 쉬어요", e: "🌬️", c: "건강관리", a: ["숨쉬어", "심호흡", "안정"] },
-            { w: "앉어서 기다려요", e: "🪑", c: "건강관리", a: ["앉아", "기다려", "안전"] },
+            { w: "앉아서 기다려요", e: "🪑", c: "건강관리", a: ["앉아", "기다려", "안전"] },
             { w: "등교 후 가방 정리", e: "🎒", c: "수업준비", a: ["가방정리", "가방열어", "물건꺼내"] },
             { w: "책상 위 비우기", e: "🧹", c: "수업준비", a: ["책상비워", "치워", "정리해"] },
             { w: "교실 문 닫으세요", e: "🚪", c: "생활지도", a: ["문닫아", "문닫으세요"] },
@@ -391,118 +419,159 @@
         const POSITIVES = ["잘했어요", "잘했어", "잘했습니다", "최고야", "최고", "좋습니다", "좋아요", "좋아", "그래", "성공", "맞아", "통과", "딩동댕", "훌륭", "오케이", "굿"];
 
         let isRunning = false, isProcessing = false, cooldown = false;
+        let lastProcessedTranscript = ""; 
         let recognition, timer, startTime, currentCmd, currentCat;
         let instrSummary = {}; 
+        let currentSessionLogs = [];
         let logs = JSON.parse(localStorage.getItem('bora_v37_logs') || '[]');
         let customDB = JSON.parse(localStorage.getItem('bora_custom_db') || '[]');
 
+        window.addEventListener('keydown', (e) => {
+            if (isProcessing && (e.key === 'Enter' || e.key === ' ')) {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault(); finalize(true);
+                }
+            }
+        });
+
         function initSpeech() {
             window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!window.SpeechRecognition) {
+                alert("이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 브라우저 사용을 권장합니다.");
+                return;
+            }
             recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'ko-KR';
+            recognition.maxAlternatives = 5; // 후보군을 5개로 확장하여 인식률 극대화
             recognition.onresult = (e) => {
-                const latestTranscript = e.results[e.resultIndex][0].transcript;
-                handleVoice(latestTranscript);
+                for (let i = e.resultIndex; i < e.results.length; ++i) {
+                    const result = e.results[i];
+                    const candidates = [];
+                    
+                    // 모든 후보군(Alternatives)을 수집하여 분석
+                    for (let j = 0; j < result.length; j++) {
+                        if (result[j].confidence > 0.1 || result.isFinal) {
+                            candidates.push(result[j].transcript.trim());
+                        }
+                    }
+                    
+                    if (candidates.length > 0) {
+                        handleVoice(candidates, result.isFinal);
+                    }
+                    if (isProcessing) break; 
+                }
             };
-            recognition.onend = () => { if (isRunning) try { recognition.start(); } catch(e) {} };
+            recognition.onend = () => { if(isRunning) try { recognition.start(); } catch(err) {} };
         }
 
         function toggleSystem() {
             const btn = document.getElementById('btn-toggle');
             if (!isRunning) {
-                isRunning = true; 
+                window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!window.SpeechRecognition) {
+                    alert("음성 인식 엔진을 사용할 수 없는 환경입니다.");
+                    return;
+                }
+                isRunning = true; currentSessionLogs = [];
+                lastProcessedTranscript = ""; 
                 if (!recognition) initSpeech();
-                try { recognition.start(); } catch(e) { /* 이미 작동 중인 경우 무시 */ }
+                try { recognition.start(); } catch(err) {}
                 btn.innerText = "수업 종료"; btn.className = "btn-main btn-stop";
                 document.getElementById('engine-status').innerText = "LIVE";
             } else {
                 isRunning = false; 
-                // 엔진을 완전히 멈추지 않고(권한 유지) 결과 처리만 중단
                 btn.innerText = "수업 시작"; btn.className = "btn-main btn-start";
                 document.getElementById('engine-status').innerText = "OFF";
+                if (currentSessionLogs.length > 0) {
+                    setTimeout(() => {
+                        if (confirm(`수업이 종료되었습니다.\n이번 수업 기록(${currentSessionLogs.length}건)을 CSV로 저장하시겠습니까?`)) downloadCSV(true);
+                    }, 500);
+                }
                 resetSystem();
+                if (recognition) try { recognition.stop(); } catch(err) {}
             }
         }
 
-        function handleVoice(text) {
-            // isRunning이 false일 때는 음성을 인식해도 아무 작업 안 함 (권한은 유지됨)
-            if (!isRunning || cooldown || !text) return;
-            const normalizedText = text.replace(/[^가-힣a-zA-Z0-9]/g, ''); 
+        function handleVoice(candidates, isFinal) {
+            if (!isRunning || cooldown || !candidates || candidates.length === 0) return;
+            
+            // 이미 처리 중인 상황에서 너무 짧은 간격의 재인식 방지
+            if (isProcessing && Date.now() - startTime < 800) return;
+
             const fullDB = [...DEFAULT_DB, ...customDB];
             
-            if (!isProcessing) {
-                for (let item of fullDB) {
-                    for (let alias of item.a) {
-                        const target = alias.replace(/[^가-힣a-zA-Z0-9]/g, '');
-                        if (target && normalizedText.includes(target)) { 
-                            triggerAction(item.w, item.e, item.c); 
-                            return; 
+            // 모든 후보군에 대해 루프를 돌며 일치하는 지시어가 있는지 확인
+            for (let text of candidates) {
+                if (!isProcessing && text === lastProcessedTranscript) continue;
+                
+                const normalizedText = text.replace(/[^가-힣a-zA-Z0-9]/g, '');
+                if (normalizedText.length < 1) continue;
+
+                if (!isProcessing) {
+                    // 1. 지시어 탐색
+                    for (let item of fullDB) {
+                        for (let alias of item.a) {
+                            const target = alias.replace(/[^가-힣a-zA-Z0-9]/g, '');
+                            if (target && normalizedText.includes(target)) { 
+                                lastProcessedTranscript = text;
+                                triggerAction(item.w, item.e, item.c); 
+                                return; 
+                            }
                         }
                     }
-                }
-            } else {
-                for (let p of POSITIVES) { 
-                    if (normalizedText.includes(p.replace(/[^가-힣a-zA-Z0-9]/g, ''))) { 
-                        finalize(true); 
-                        return; 
-                    } 
+                } else {
+                    // 2. 칭찬/성공 키워드 탐색 (수행 완료 처리)
+                    for (let p of POSITIVES) { 
+                        if (normalizedText.includes(p.replace(/[^가-힣a-zA-Z0-9]/g, ''))) { 
+                            finalize(true); 
+                            return; 
+                        } 
+                    }
                 }
             }
         }
 
         function triggerAction(word, emoji, cat) {
             if (isProcessing) return; 
-            isProcessing = true; currentCmd = word; currentCat = cat; startTime = Date.now();
-            document.getElementById('display-station').classList.add('active');
+            clearInterval(timer); isProcessing = true; currentCmd = word; currentCat = cat; startTime = Date.now();
+            const station = document.getElementById('display-station');
+            station.classList.add('active');
             document.getElementById('idle-ui').style.display = 'none';
             document.getElementById('card-content').classList.add('show');
             document.getElementById('c-cat').innerText = `[${cat}]`;
             
             const emojiEl = document.getElementById('c-emoji');
             const wordEl = document.getElementById('c-word');
-            
-            // 촉구 용암법 설정 적용
             const fadingSize = parseInt(localStorage.getItem('bora_fading_size') || '1');
             const fadingMode = parseInt(localStorage.getItem('bora_fading_mode') || '1');
-            
             const scale = fadingSize === 1 ? 1 : fadingSize === 2 ? 0.75 : fadingSize === 3 ? 0.5 : 0.25;
             
             let showEmoji = (fadingMode === 1 || fadingMode === 3);
             let showWord = (fadingMode === 1 || fadingMode === 2);
             
             if (showEmoji && emoji && String(emoji).trim().length > 0 && emoji !== "null") {
-                emojiEl.innerText = emoji;
-                emojiEl.style.display = 'block';
-                emojiEl.style.fontSize = (25 * scale) + 'vmin';
-            } else {
-                emojiEl.style.display = 'none';
-            }
-
+                emojiEl.innerText = emoji; emojiEl.style.display = 'block'; emojiEl.style.fontSize = (25 * scale) + 'vmin';
+            } else { emojiEl.style.display = 'none'; }
+            
             if (showWord) {
-                wordEl.innerText = word;
-                wordEl.style.display = 'block';
+                wordEl.innerText = word; wordEl.style.display = 'block';
                 const baseSize = (emojiEl.style.display === 'none') ? 18 : 10;
                 wordEl.style.fontSize = (baseSize * scale) + 'vmin';
-            } else {
-                wordEl.style.display = 'none';
-            }
+            } else { wordEl.style.display = 'none'; }
             
             const timerWrap = document.getElementById('timer-wrap');
             const timerFill = document.getElementById('timer-fill');
-            timerWrap.style.visibility = 'visible';
-            timerFill.style.width = '100%';
-            
-            // 수행 완료 버튼 표시
+            timerWrap.style.visibility = 'visible'; timerFill.style.width = '100%';
             document.getElementById('btn-done').style.display = 'block';
             
             updateSummary(word); 
-
             let limit = parseInt(localStorage.getItem('bora_v37_limit') || '10');
             if (limit <= 0) limit = 10;
             
             timer = setInterval(() => {
+                if (!isProcessing) { clearInterval(timer); return; }
                 const elapsed = (Date.now() - startTime) / 1000;
                 let percent = 100 - (elapsed / limit * 100);
                 timerFill.style.width = Math.max(0, percent) + "%";
@@ -511,27 +580,57 @@
         }
 
         function updateSummary(word) {
+            if (!word) return;
             instrSummary[word] = (instrSummary[word] || 0) + 1;
+            renderSummary();
+        }
+
+        function renderSummary() {
             const list = document.getElementById('sm-list');
-            list.innerHTML = Object.entries(instrSummary)
+            const entries = Object.entries(instrSummary);
+            if (entries.length === 0) {
+                list.innerHTML = `<div style="color: var(--text-dim); font-size: 0.8rem; text-align: center; margin-top: 20px;">수업을 시작하면<br>요약이 표시됩니다.</div>`;
+                return;
+            }
+            list.innerHTML = entries
                 .sort((a,b) => b[1] - a[1])
                 .map(([w, c]) => `<div class="sm-item"><span class="sm-word">${w}</span><span class="sm-count">${c}회</span></div>`)
                 .join('');
         }
 
+        function initSummaryFromLogs() {
+            instrSummary = {};
+            const todayStr = new Date().toLocaleDateString().substring(0, 10);
+            logs.forEach(l => { if (l.date && l.date.includes(todayStr)) instrSummary[l.cmd] = (instrSummary[l.cmd] || 0) + 1; });
+            renderSummary();
+        }
+
         function finalize(isSuccess) {
+            if (!isProcessing) return;
             clearInterval(timer);
             const endTime = Date.now();
             const delay = ((endTime - startTime) / 1000).toFixed(2);
-            logs.unshift({ date: new Date().toLocaleString(), student: localStorage.getItem('bora_v37_student') || '미입력', subject: localStorage.getItem('bora_v37_subject') || '일반', cat: currentCat, cmd: currentCmd, delay: isSuccess ? delay : "시간초과", status: isSuccess ? "성공" : "실패" });
+            const newLog = { 
+                date: new Date().toLocaleString(), 
+                student: localStorage.getItem('bora_v37_student') || '미입력', 
+                subject: localStorage.getItem('bora_v37_subject') || '일반', 
+                cat: currentCat, cmd: currentCmd, 
+                delay: isSuccess ? delay : "시간초과", status: isSuccess ? "성공" : "실패" 
+            };
+            logs.unshift(newLog); currentSessionLogs.push(newLog);
+            if (logs.length > 500) logs.pop();
             localStorage.setItem('bora_v37_logs', JSON.stringify(logs));
             renderLogs(); resetSystem();
-            cooldown = true; setTimeout(() => { cooldown = false; }, 2000);
+            
+            lastProcessedTranscript = ""; 
+            cooldown = true; 
+            setTimeout(() => { cooldown = false; }, 1500);
         }
 
         function resetSystem() {
-            isProcessing = false;
-            document.getElementById('display-station').classList.remove('active');
+            isProcessing = false; clearInterval(timer);
+            const station = document.getElementById('display-station');
+            station.classList.remove('active');
             document.getElementById('idle-ui').style.display = 'block';
             document.getElementById('card-content').classList.remove('show');
             document.getElementById('timer-wrap').style.visibility = 'hidden';
@@ -543,9 +642,9 @@
         }
 
         function clearLogs() {
-            if(confirm('🚨 모든 연구 로그를 삭제하시겠습니까?') && confirm('정말로 삭제합니까?')) {
+            if(confirm('🚨 모든 연구 로그를 삭제하시겠습니까?')) {
                 logs = []; localStorage.setItem('bora_v37_logs', JSON.stringify([])); renderLogs();
-                instrSummary = {}; document.getElementById('sm-list').innerHTML = '';
+                instrSummary = {}; renderSummary();
             }
         }
 
@@ -554,20 +653,16 @@
             const e = document.getElementById('new-emoji').value.trim();
             const c = document.getElementById('new-cat').value.trim() || "일반";
             const aliasInput = document.getElementById('new-alias').value.trim();
-            if(!w) { alert('단어는 필수 입력 사항입니다!'); return; }
-            let a = aliasInput ? aliasInput.split(',').map(s => s.trim().replace(/\s/g, '')) : [w.replace(/\s/g, '')];
-            a = a.filter(s => s.length > 0);
-            if (a.length === 0) a = [w.replace(/\s/g, '')];
+            if(!w) { alert('단어는 필수!'); return; }
+            let a = aliasInput ? aliasInput.split(',').map(s => s.trim()) : [w];
             customDB.push({ w, e, c, a });
             localStorage.setItem('bora_custom_db', JSON.stringify(customDB));
             renderCustomList();
-            document.getElementById('new-word').value = '';
-            document.getElementById('new-emoji').value = '';
-            document.getElementById('new-alias').value = '';
+            document.getElementById('new-word').value = ''; document.getElementById('new-emoji').value = ''; document.getElementById('new-alias').value = '';
         }
 
         function deleteCustom(index) {
-            if(confirm('이 지시어를 삭제하시겠습니까?')) {
+            if(confirm('삭제하시겠습니까?')) {
                 customDB.splice(index, 1);
                 localStorage.setItem('bora_custom_db', JSON.stringify(customDB));
                 renderCustomList();
@@ -575,36 +670,32 @@
         }
 
         function renderCustomList() {
-            const list = document.getElementById('custom-kw-list');
-            list.innerHTML = customDB.map((item, idx) => `<div class="kw-item"><span>${item.e || '📄'} ${item.w} (${item.c})</span><button onclick="deleteCustom(${idx})" class="btn-small-del">삭제</button></div>`).join('');
+            document.getElementById('custom-kw-list').innerHTML = customDB.map((item, idx) => `<div class="kw-item"><span>${item.e || '📄'} ${item.w}</span><button onclick="deleteCustom(${idx})" class="btn-small-del">삭제</button></div>`).join('');
         }
 
-        function downloadCSV() {
+        function downloadCSV(onlySession = false) {
             const head = ["일시", "학생", "교과", "카테고리", "지시어", "지연시간", "결과"];
-            const body = logs.map(l => [l.date, l.student, l.subject, l.cat, l.cmd, l.delay, l.status]);
-            const content = "\ufeff" + head.join(",") + "\n" + body.map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+            const targetData = onlySession ? currentSessionLogs : logs;
+            if (targetData.length === 0) return;
+            const content = "\ufeff" + head.join(",") + "\n" + targetData.map(l => [l.date, l.student, l.subject, l.cat, l.cmd, l.delay, l.status].map(c => `"${c}"`).join(",")).join("\n");
             const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `BORA_DATA_${new Date().toLocaleDateString()}.csv`; a.click();
+            const a = document.createElement("a");
+            const name = localStorage.getItem('bora_v37_student') || '미입력';
+            const now = new Date();
+            const dateStr = `${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}-${now.getDate().toString().padStart(2,'0')}`;
+            a.href = URL.createObjectURL(blob); a.download = `BORA_${name}_${dateStr}.csv`; a.click();
         }
 
         function openInstructions() {
             const listEl = document.getElementById('all-instr-list');
-            const fullDB = [...DEFAULT_DB, ...customDB];
             const grouped = {};
-            fullDB.forEach(item => {
-                if (!grouped[item.c]) grouped[item.c] = [];
-                grouped[item.c].push(item);
-            });
-
+            [...DEFAULT_DB, ...customDB].forEach(item => { if (!grouped[item.c]) grouped[item.c] = []; grouped[item.c].push(item); });
             let html = '';
             for (const cat in grouped) {
                 html += `<h3 style="color: var(--primary-yellow); margin: 20px 0 10px 0; border-left: 5px solid var(--primary-cyan); padding-left: 10px;">${cat}</h3>`;
-                html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;">`;
+                html += `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;">`;
                 grouped[cat].forEach(item => {
-                    html += `<div style="background: #222; padding: 10px; border-radius: 10px; text-align: center; border: 1px solid #333;">
-                                <div style="font-size: 1.5rem; margin-bottom: 5px;">${item.e || '📄'}</div>
-                                <div style="font-size: 0.9rem; font-weight: 900;">${item.w}</div>
-                             </div>`;
+                    html += `<div style="background: var(--bg-color); padding: 10px; border-radius: 10px; text-align: center; border: 1px solid var(--border-color); color: var(--text-main); font-weight: 900;">${item.e || '📄'} ${item.w}</div>`;
                 });
                 html += `</div>`;
             }
@@ -612,7 +703,6 @@
             document.getElementById('instructions-modal').style.display = 'flex';
         }
         function closeInstructions() { document.getElementById('instructions-modal').style.display = 'none'; }
-
         function openHelp() { document.getElementById('help-modal').style.display = 'flex'; }
         function closeHelp() { document.getElementById('help-modal').style.display = 'none'; }
         function openSettings() { document.getElementById('settings-modal').style.display = 'flex'; renderCustomList(); }
@@ -629,37 +719,45 @@
             updateUI(); closeSettings();
         }
 
-        function updateUI() {
-            const student = localStorage.getItem('bora_v37_student') || '미입력';
-            const subject = localStorage.getItem('bora_v37_subject') || '일반 수업';
-            const content = localStorage.getItem('bora_v37_content') || '행동 지시 측정';
-            const fadingSize = localStorage.getItem('bora_fading_size') || '1';
-            const fadingMode = localStorage.getItem('bora_fading_mode') || '1';
-
-            document.getElementById('v-student').innerText = student;
-            document.getElementById('v-subject').innerText = subject;
-            document.getElementById('v-content').innerText = content;
-            document.getElementById('v-fading').innerText = `${fadingMode}단계 / 크기 ${fadingSize}`;
-
-            // 헤더 텍스트 자동 크기 조절 (칸에 맞게 축소)
-            document.querySelectorAll('.info-value').forEach(el => {
-                el.style.fontSize = '1.8rem'; 
-                let size = 1.8;
-                while (el.scrollWidth > el.offsetWidth && size > 0.9) {
-                    size -= 0.1;
-                    el.style.fontSize = size + 'rem';
-                }
-            });
-
-            document.getElementById('i-student').value = student === '미입력' ? '' : student;
-            document.getElementById('i-subject').value = subject === '일반 수업' ? '' : subject;
-            document.getElementById('i-content').value = content === '행동 지시 측정' ? '' : content;
-            document.getElementById('i-limit').value = localStorage.getItem('bora_v37_limit') || '10';
-            document.getElementById('i-fading-size').value = fadingSize;
-            document.getElementById('i-fading-mode').value = fadingMode;
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('bora_theme') || 'dark';
+            localStorage.setItem('bora_theme', currentTheme === 'dark' ? 'light' : 'dark');
+            updateUI();
         }
 
-        window.onload = () => { updateUI(); renderLogs(); };
+        function updateUI() {
+            const theme = localStorage.getItem('bora_theme') || 'dark';
+            if (theme === 'light') { document.body.classList.add('light-mode'); } 
+            else { document.body.classList.remove('light-mode'); }
+            const themeBtn = document.getElementById('btn-theme-toggle');
+            if (themeBtn) themeBtn.innerText = theme === 'light' ? '☀️' : '🌙';
+
+            document.getElementById('v-student').innerText = localStorage.getItem('bora_v37_student') || '미입력';
+            document.getElementById('v-subject').innerText = localStorage.getItem('bora_v37_subject') || '일반 수업';
+            document.getElementById('v-content').innerText = localStorage.getItem('bora_v37_content') || '기본 지시 측정';
+            
+            const mode = localStorage.getItem('bora_fading_mode') || '1';
+            const size = localStorage.getItem('bora_fading_size') || '1';
+            const modeLabels = ["", "전체", "이모지 제거", "텍스트 제거", "모두 제거"];
+            document.getElementById('v-fading').innerText = `${modeLabels[mode] || '전체'} / 크기 ${size}단계`;
+
+            document.querySelectorAll('.info-value').forEach(el => {
+                el.style.fontSize = '1.8rem'; 
+                let s = 1.8;
+                while (el.scrollWidth > el.offsetWidth && s > 0.9) { s -= 0.1; el.style.fontSize = s + 'rem'; }
+            });
+
+            document.getElementById('i-student').value = localStorage.getItem('bora_v37_student') || '';
+            document.getElementById('i-subject').value = localStorage.getItem('bora_v37_subject') || '';
+            document.getElementById('i-content').value = localStorage.getItem('bora_v37_content') || '';
+            document.getElementById('i-limit').value = localStorage.getItem('bora_v37_limit') || '10';
+            document.getElementById('i-fading-size').value = localStorage.getItem('bora_fading_size') || '1';
+            document.getElementById('i-fading-mode').value = localStorage.getItem('bora_fading_mode') || '1';
+            
+            renderSummary();
+        }
+
+        window.onload = () => { updateUI(); renderLogs(); initSummaryFromLogs(); };
     </script>
 </body>
 </html>
