@@ -174,6 +174,19 @@
         ">수행<br>완료</button>
 
         <div id="timer-wrap"><div id="timer-fill"></div></div>
+
+        <!-- [v3.12] 인식 디버그 패널 — 헤더 우측 OFF/LIVE 클릭으로 토글 -->
+        <div id="debug-panel" style="
+            position: fixed; bottom: 130px; left: 320px; max-width: 540px; min-width: 280px;
+            background: rgba(0,0,0,0.88); color: #00E5FF; padding: 12px 16px;
+            border-radius: 14px; font-size: 0.9rem; z-index: 350;
+            font-family: 'D2Coding', 'Consolas', monospace; display: none;
+            border: 2px solid #00E5FF; box-shadow: 0 8px 20px rgba(0,229,255,0.3);
+        ">
+            <div style="color: #FFD700; margin-bottom: 6px; font-weight: 900; font-size: 0.95rem;">🎙 인식 디버그 (헤더 OFF/LIVE 다시 클릭하면 숨김)</div>
+            <div id="debug-text" style="color: #FFFFFF; word-break: break-all; line-height: 1.5;">대기 중...</div>
+            <div id="debug-match" style="color: #00E676; margin-top: 6px; font-weight: 900;"></div>
+        </div>
     </main>
 
     <footer><button id="btn-toggle" class="btn-main btn-start" onclick="toggleSystem()">수업 시작</button></footer>
@@ -379,7 +392,7 @@
             { w: "심호흡 해요", e: "🌬️", c: "감정조절", a: ["숨쉬어", "심호흡", "진정해"] },
             { w: "아프면 말해요", e: "🚑", c: "건강관리", a: ["어디아파", "컨디션", "선생님불러"] },
             { w: "앉아 쉬어요", e: "🛋️", c: "건강관리", a: ["쉬어", "누워"] },
-            { w: "인사 하기", e: "🙇", c: "의사소통", a: ["인사", "안녕"] },
+            { w: "인사합시다", e: "🙇", c: "의사소통", a: ["인사합시다", "인사해요", "인사하자", "인사해", "안녕하세요", "안녕히계세요", "안녕히가세요", "인사", "안녕"] },
             { w: "신발 갈아신으세요", e: "👟", c: "생활지도", a: ["신발", "갈아신어", "실외화", "운동화"] },
             { w: "코 풀으세요", e: "🤧", c: "위생관리", a: ["코풀어", "휴지", "콧물"] },
             { w: "안경 닦으세요", e: "👓", c: "위생관리", a: ["안경", "닦아", "안경닦이"] },
@@ -481,6 +494,7 @@
 
         // 통합 키 핸들러: 빔포인터·키보드 → 수행 완료 finalize(true)
         window.addEventListener('keydown', (e) => {
+            // 1) 학습 모드: 누른 키를 사용자 키로 등록
             if (remoteCaptureActive) {
                 e.preventDefault();
                 const k = e.key;
@@ -493,8 +507,10 @@
                 renderRemoteKeyList();
                 return;
             }
+            // 2) 즉시 기록 트리거 (수행 완료)
             if (!isProcessing) return;
             const tag = e.target.tagName;
+            // [v3.10] SELECT 가드 추가 — 설정 모달 변경 중 오작동 방지
             if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
             const customKeys = JSON.parse(localStorage.getItem('bora_remote_keys') || '[]');
@@ -520,17 +536,21 @@
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'ko-KR';
-            recognition.maxAlternatives = 3;
+            recognition.maxAlternatives = 5;
 
             recognition.onresult = (e) => {
                 for (let i = e.resultIndex; i < e.results.length; ++i) {
                     const result = e.results[i];
                     const candidates = [];
                     for (let j = 0; j < result.length; j++) {
-                        if (result[j].confidence > 0.1 || result.isFinal) {
+                        // [v3.12] confidence 조건 제거 — 모든 인식 후보를 받아 매칭 기회 극대화
+                        if (result[j].transcript) {
                             candidates.push(result[j].transcript.trim());
                         }
                     }
+                    // [v3.12] 디버그 패널 업데이트
+                    const dt = document.getElementById('debug-text');
+                    if (dt) dt.innerText = '📥 ' + candidates.slice(0, 4).join(' | ') + (result.isFinal ? '  [FINAL]' : '  [interim]');
                     if (candidates.length > 0) handleVoice(candidates, result.isFinal);
                     if (isProcessing) break;
                 }
@@ -539,6 +559,7 @@
             recognition.onerror = (event) => {
                 console.warn('Speech recognition error:', event.error);
                 const statusEl = document.getElementById('engine-status');
+                // [v3.10] 권한 거부 시 무한 재시도 중단
                 if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
                     statusEl.innerHTML = '<span style="color:red;">🔒 마이크 권한 필요</span>';
                     permissionDenied = true;
@@ -560,6 +581,7 @@
             };
         }
 
+        // [v3.10] 최신 브라우저 호환 beforeunload
         window.addEventListener('beforeunload', function(e) {
             if (isRunning || currentSessionLogs.length > 0) {
                 e.preventDefault();
@@ -576,6 +598,7 @@
                     alert("음성 인식 엔진을 사용할 수 없는 환경입니다.");
                     return;
                 }
+                // [v3.10] 이전 recognition 인스턴스의 핸들러를 끊은 뒤 abort
                 permissionDenied = false;
                 clearTimeout(restartTimer);
                 if (recognition) {
@@ -611,19 +634,34 @@
 
         function handleVoice(candidates, isFinal) {
             if (!isRunning || cooldown || !candidates || candidates.length === 0) return;
+
             const fullDB = [...DEFAULT_DB, ...customDB];
+
             let bestMatch = null;
             let longestMatchLen = 0;
+
             for (let text of candidates) {
                 const normalizedText = text.replace(/[^가-힣a-zA-Z0-9]/g, '');
                 if (normalizedText.length < 1) continue;
+
                 if (!isProcessing) {
                     for (let item of fullDB) {
                         for (let alias of item.a) {
                             const target = alias.replace(/[^가-힣a-zA-Z0-9]/g, '');
                             if (!target) continue;
-                            // [v3.11] 짧은 alias(≤3자)는 정확 일치만 인정 → 일반 발화 false positive 차단
-                            const matched = (target.length <= 3) ? (normalizedText === target) : normalizedText.includes(target);
+                            // [v3.12] 매칭 임계값 완화
+                            //   1~2자: 정확 일치만 (false positive 차단)
+                            //   3자  : 정확/시작/끝 일치 허용 (어미 변형 대응)
+                            //   4자+ : includes 매칭
+                            const tlen = target.length;
+                            let matched;
+                            if (tlen <= 2) {
+                                matched = (normalizedText === target);
+                            } else if (tlen === 3) {
+                                matched = (normalizedText === target || normalizedText.startsWith(target) || normalizedText.endsWith(target));
+                            } else {
+                                matched = normalizedText.includes(target);
+                            }
                             if (matched && target.length > longestMatchLen) {
                                 longestMatchLen = target.length;
                                 bestMatch = { item, text };
@@ -643,6 +681,7 @@
                     }
                 }
             }
+
             if (bestMatch && !isProcessing) {
                 if (bestMatch.text === lastProcessedTranscript) return;
                 lastProcessedTranscript = bestMatch.text;
@@ -652,34 +691,46 @@
 
         function triggerAction(word, emoji, cat) {
             if (isProcessing) return;
+            // [v3.12] 디버그 매칭 표시
+            const dm = document.getElementById('debug-match');
+            if (dm) dm.innerText = '✅ 매칭: [' + cat + '] ' + word;
             clearInterval(timer); isProcessing = true; currentCmd = word; currentCat = cat; startTime = Date.now();
             const station = document.getElementById('display-station');
             station.classList.add('active');
             document.getElementById('idle-ui').style.display = 'none';
             document.getElementById('card-content').classList.add('show');
             document.getElementById('c-cat').innerText = `[${cat}]`;
+
             const emojiEl = document.getElementById('c-emoji');
             const wordEl = document.getElementById('c-word');
             const fadingSize = parseInt(localStorage.getItem('bora_fading_size') || '1');
             const fadingMode = parseInt(localStorage.getItem('bora_fading_mode') || '1');
             const scale = fadingSize === 1 ? 1 : fadingSize === 2 ? 0.75 : fadingSize === 3 ? 0.5 : 0.25;
+
             let showEmoji = (fadingMode === 1 || fadingMode === 3);
             let showWord = (fadingMode === 1 || fadingMode === 2);
+
+            // [v3.10] CSS(38/16)와 PATCH_GUIDE(35/15) 의도에 맞춰 크기 일관화
             if (showEmoji && emoji && String(emoji).trim().length > 0 && emoji !== "null") {
                 emojiEl.innerText = emoji; emojiEl.style.display = 'block'; emojiEl.style.fontSize = (35 * scale) + 'vmin';
             } else { emojiEl.style.display = 'none'; }
+
             if (showWord) {
                 wordEl.innerText = word; wordEl.style.display = 'block';
                 const baseSize = (emojiEl.style.display === 'none') ? 22 : 15;
                 wordEl.style.fontSize = (baseSize * scale) + 'vmin';
             } else { wordEl.style.display = 'none'; }
+
             const timerWrap = document.getElementById('timer-wrap');
             const timerFill = document.getElementById('timer-fill');
             timerWrap.style.visibility = 'visible'; timerFill.style.width = '100%';
             document.getElementById('btn-done').style.display = 'block';
+
             updateSummary(word);
+            // [v3.10] NaN·이상값 안전 처리 (parseFloat + isFinite)
             let limit = parseFloat(localStorage.getItem('bora_v40_limit') || '10');
             if (!isFinite(limit) || limit <= 0) limit = 10;
+
             timer = setInterval(() => {
                 if (!isProcessing) { clearInterval(timer); return; }
                 const elapsed = (Date.now() - startTime) / 1000;
@@ -732,6 +783,7 @@
             if (logs.length > 500) logs.pop();
             localStorage.setItem('bora_v40_logs', JSON.stringify(logs));
             renderLogs(); resetSystem();
+
             lastProcessedTranscript = "";
             cooldown = true;
             setTimeout(() => { cooldown = false; }, 1500);
@@ -755,7 +807,7 @@
             if(confirm('🚨 모든 연구 로그를 삭제하시겠습니까?')) {
                 logs = []; localStorage.setItem('bora_v40_logs', JSON.stringify([])); renderLogs();
                 instrSummary = {}; renderSummary();
-                currentSessionLogs = [];
+                currentSessionLogs = []; // [v3.10] 진행 중 세션 로그도 함께 비움
             }
         }
 
@@ -784,6 +836,7 @@
             document.getElementById('custom-kw-list').innerHTML = customDB.map((item, idx) => `<div class="kw-item"><span>${escHtml(item.e || '📄')} ${escHtml(item.w)}</span><button onclick="deleteCustom(${idx})" class="btn-small-del">삭제</button></div>`).join('');
         }
 
+        // [v3.10] CSV 따옴표·줄바꿈 escape (RFC 4180 호환)
         function csvCell(v) {
             const s = String(v == null ? '' : v);
             return '"' + s.replace(/"/g, '""').replace(/\r?\n/g, ' ') + '"';
@@ -827,7 +880,7 @@
         function openSettings() {
             document.getElementById('settings-modal').style.display = 'flex';
             renderCustomList();
-            renderRemoteKeyList();
+            renderRemoteKeyList(); // [v3.10]
         }
         function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
         function toggleLogs() { document.getElementById('log-panel').classList.toggle('open'); }
@@ -836,6 +889,7 @@
             localStorage.setItem('bora_v40_student', document.getElementById('i-student').value);
             localStorage.setItem('bora_v40_subject', document.getElementById('i-subject').value);
             localStorage.setItem('bora_v40_content', document.getElementById('i-content').value);
+            // [v3.10] 제한시간 입력 검증
             let lim = parseFloat(document.getElementById('i-limit').value);
             if (!isFinite(lim) || lim <= 0) lim = 10;
             localStorage.setItem('bora_v40_limit', String(lim));
@@ -856,28 +910,50 @@
             else { document.body.classList.remove('light-mode'); }
             const themeBtn = document.getElementById('btn-theme-toggle');
             if (themeBtn) themeBtn.innerText = theme === 'light' ? '☀️' : '🌙';
+
             document.getElementById('v-student').innerText = localStorage.getItem('bora_v40_student') || '미입력';
             document.getElementById('v-subject').innerText = localStorage.getItem('bora_v40_subject') || '일반 수업';
             document.getElementById('v-content').innerText = localStorage.getItem('bora_v40_content') || '기본 지시 측정';
+
             const mode = localStorage.getItem('bora_fading_mode') || '1';
             const size = localStorage.getItem('bora_fading_size') || '1';
             const modeLabels = ["", "전체", "이모지 제거", "텍스트 제거", "모두 제거"];
             document.getElementById('v-fading').innerText = `${modeLabels[mode] || '전체'} / 크기 ${size}단계`;
+
             document.querySelectorAll('.info-value').forEach(el => {
                 el.style.fontSize = '1.8rem';
                 let s = 1.8;
                 while (el.scrollWidth > el.offsetWidth && s > 0.9) { s -= 0.1; el.style.fontSize = s + 'rem'; }
             });
+
             document.getElementById('i-student').value = localStorage.getItem('bora_v40_student') || '';
             document.getElementById('i-subject').value = localStorage.getItem('bora_v40_subject') || '';
             document.getElementById('i-content').value = localStorage.getItem('bora_v40_content') || '';
             document.getElementById('i-limit').value = localStorage.getItem('bora_v40_limit') || '10';
             document.getElementById('i-fading-size').value = localStorage.getItem('bora_fading_size') || '1';
             document.getElementById('i-fading-mode').value = localStorage.getItem('bora_fading_mode') || '1';
+
             renderSummary();
         }
 
-        window.onload = () => { updateUI(); renderLogs(); initSummaryFromLogs(); };
+        // [v3.12] 디버그 패널 토글 — 헤더 우측 OFF/LIVE 클릭
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debug-panel');
+            if (!panel) return;
+            const isOpen = panel.style.display === 'block';
+            panel.style.display = isOpen ? 'none' : 'block';
+        }
+
+        window.onload = () => {
+            updateUI(); renderLogs(); initSummaryFromLogs();
+            // [v3.12] 헤더 엔진상태 클릭으로 디버그 토글
+            const eng = document.getElementById('engine-status');
+            if (eng) {
+                eng.style.cursor = 'pointer';
+                eng.title = '클릭하면 인식 디버그 패널 표시/숨김';
+                eng.addEventListener('click', toggleDebugPanel);
+            }
+        };
     </script>
 </body>
 </html>
