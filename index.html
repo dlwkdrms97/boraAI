@@ -317,8 +317,8 @@
         // ===========================================================
 
         const DEFAULT_DB = [
-            { w: "앉으세요", e: "🪑", c: "수업준비", a: ["앉으", "앉아", "앉아요", "안자", "자리에"] },
-            { w: "일어나세요", e: "🧍", c: "수업준비", a: ["일어나", "일어섯", "일어서", "기립"] },
+            { w: "앉으세요", e: "🪑", c: "수업준비", a: ["앉으세요", "앉아주세요", "앉아봐요", "앉아볼까요", "자리에앉아요", "자리에앉아", "자리에앉으세요", "앉으", "앉아"] },
+            { w: "일어나세요", e: "🧍", c: "수업준비", a: ["일어나세요", "일어나주세요", "일어서주세요", "일어서봐요", "자리에서일어나요", "기립하세요", "일어나", "기립"] },
             { w: "앞에 보세요", e: "🎯", c: "주의집중", a: ["앞에", "정면", "앞을"] },
             { w: "바른 자세", e: "🧘", c: "수업준비", a: ["바른자세", "똑바로", "허리펴", "자세"] },
             { w: "선생님 보세요", e: "🧑‍🏫", c: "주의집중", a: ["선생님보세요", "선생님봐", "선생님보자", "나를봐주세요", "날봐주세요", "샘보세요", "샘보자"] },
@@ -464,6 +464,83 @@
 
         let restartTimer;
         let permissionDenied = false; // [v3.10] 권한 거부 시 무한 재시도 방지 플래그
+        // [v3.14] 마이크 스트림 영구 점유 — Chrome 권한 재요청 방지
+        let micStream = null;
+        let micKeepAliveTimer = null;
+
+        async function ensureMicPermission() {
+            // 1) Permissions API로 사전 진단
+            let permState = 'prompt';
+            try {
+                if (navigator.permissions && navigator.permissions.query) {
+                    const r = await navigator.permissions.query({ name: 'microphone' });
+                    permState = r.state;
+                    // 권한 변화 감지 → UI 자동 갱신
+                    r.onchange = () => updateMicStatusUI(r.state);
+                }
+            } catch(e) { /* Safari 등 미지원 — 그대로 진행 */ }
+
+            updateMicStatusUI(permState);
+
+            // 2) 권한 명시적 거부 시 친절한 안내
+            if (permState === 'denied') {
+                showMicHelp();
+                return false;
+            }
+
+            // 3) getUserMedia로 마이크 스트림 획득(영구 점유)
+            try {
+                if (!micStream || !micStream.active) {
+                    micStream = await navigator.mediaDevices.getUserMedia({
+                        audio: {
+                            echoCancellation: true,
+                            noiseSuppression: true,
+                            autoGainControl: true
+                        }
+                    });
+                    // [v3.14] keep-alive 모니터링 — 끊기면 자동 복구
+                    if (micKeepAliveTimer) clearInterval(micKeepAliveTimer);
+                    micKeepAliveTimer = setInterval(() => {
+                        if (!micStream || !micStream.active) {
+                            console.warn('[v3.14] micStream 끊김 감지 → 재획득 시도');
+                            ensureMicPermission();
+                        }
+                    }, 5000);
+                }
+                updateMicStatusUI('granted');
+                return true;
+            } catch(e) {
+                console.error('[v3.14] 마이크 획득 실패:', e);
+                showMicHelp();
+                return false;
+            }
+        }
+
+        function updateMicStatusUI(state) {
+            const statusEl = document.getElementById('engine-status');
+            if (!statusEl) return;
+            // 수업 진행 중일 때는 LIVE/OFF 표시 우선
+            if (isRunning) return;
+            if (state === 'granted') {
+                statusEl.innerHTML = '<span style="color:#00E676;">🎤 마이크 OK</span>';
+            } else if (state === 'denied') {
+                statusEl.innerHTML = '<span style="color:#FF3D00;">🔒 마이크 차단</span>';
+            } else {
+                statusEl.innerHTML = '<span style="color:#FFD700;">🎤 마이크 대기</span>';
+            }
+        }
+
+        function showMicHelp() {
+            alert(
+                '🔒 마이크 권한이 필요합니다.\n\n' +
+                '▶ 해결 방법\n' +
+                '1) 주소창 왼쪽 자물쇠(🔒) 클릭\n' +
+                '2) "사이트 설정" 선택\n' +
+                '3) 마이크 → "허용" 으로 변경\n' +
+                '4) 페이지 새로고침(Ctrl+Shift+R)\n\n' +
+                '이렇게 한 번 설정하면 다시 묻지 않습니다.'
+            );
+        }
 
         // ───────────────────────────────────────────────────────────
         // [v3.10] 빔 포인터 트리거 (PageDown/PageUp/Arrow + 사용자 학습)
@@ -541,11 +618,13 @@
             recognition.onresult = (e) => {
                 for (let i = e.resultIndex; i < e.results.length; ++i) {
                     const result = e.results[i];
+                    // [v3.13] cooldown 중에는 결과 자체 무시 → 늦은 final 결과로 반복 활성화 차단
+                    if (cooldown) continue;
                     const candidates = [];
                     for (let j = 0; j < result.length; j++) {
-                        // [v3.12] confidence 조건 제거 — 모든 인식 후보를 받아 매칭 기회 극대화
-                        if (result[j].transcript) {
-                            candidates.push(result[j].transcript.trim());
+                        // [v3.13] final 결과 위주 + interim은 confidence 있을 때만
+                        if (result.isFinal || (result[j].confidence && result[j].confidence > 0.3)) {
+                            if (result[j].transcript) candidates.push(result[j].transcript.trim());
                         }
                     }
                     // [v3.12] 디버그 패널 업데이트
@@ -590,7 +669,7 @@
             }
         });
 
-        function toggleSystem() {
+        async function toggleSystem() {
             const btn = document.getElementById('btn-toggle');
             if (!isRunning) {
                 window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -598,6 +677,9 @@
                     alert("음성 인식 엔진을 사용할 수 없는 환경입니다.");
                     return;
                 }
+                // [v3.14] 마이크 권한 자동 획득·점유 — 한 번만 허용해 두면 평생 OK
+                const ok = await ensureMicPermission();
+                if (!ok) return;
                 // [v3.10] 이전 recognition 인스턴스의 핸들러를 끊은 뒤 abort
                 permissionDenied = false;
                 clearTimeout(restartTimer);
@@ -649,19 +731,10 @@
                         for (let alias of item.a) {
                             const target = alias.replace(/[^가-힣a-zA-Z0-9]/g, '');
                             if (!target) continue;
-                            // [v3.12] 매칭 임계값 완화
-                            //   1~2자: 정확 일치만 (false positive 차단)
-                            //   3자  : 정확/시작/끝 일치 허용 (어미 변형 대응)
+                            // [v3.13] 매칭 임계값 v3.11 복원 — 실수업 false positive 차단
+                            //   1~3자: 정확 일치만 (자리에 / 일어서 등 단독 발화 차단)
                             //   4자+ : includes 매칭
-                            const tlen = target.length;
-                            let matched;
-                            if (tlen <= 2) {
-                                matched = (normalizedText === target);
-                            } else if (tlen === 3) {
-                                matched = (normalizedText === target || normalizedText.startsWith(target) || normalizedText.endsWith(target));
-                            } else {
-                                matched = normalizedText.includes(target);
-                            }
+                            const matched = (target.length <= 3) ? (normalizedText === target) : normalizedText.includes(target);
                             if (matched && target.length > longestMatchLen) {
                                 longestMatchLen = target.length;
                                 bestMatch = { item, text };
@@ -784,9 +857,11 @@
             localStorage.setItem('bora_v40_logs', JSON.stringify(logs));
             renderLogs(); resetSystem();
 
-            lastProcessedTranscript = "";
+            // [v3.13] 같은 발화 재매칭 차단을 위해 lastProcessedTranscript 유지(5초)
             cooldown = true;
-            setTimeout(() => { cooldown = false; }, 1500);
+            setTimeout(() => { cooldown = false; }, 2500);
+            // [v3.13] 5초 후에만 lastProcessedTranscript 리셋 → 짧은 시간 내 동일 발화 무시
+            setTimeout(() => { lastProcessedTranscript = ""; }, 5000);
         }
 
         function resetSystem() {
@@ -953,6 +1028,18 @@
                 eng.title = '클릭하면 인식 디버그 패널 표시/숨김';
                 eng.addEventListener('click', toggleDebugPanel);
             }
+            // [v3.14] 페이지 로드 시 마이크 권한 사전 진단(요청은 안 함)
+            (async () => {
+                try {
+                    if (navigator.permissions && navigator.permissions.query) {
+                        const r = await navigator.permissions.query({ name: 'microphone' });
+                        updateMicStatusUI(r.state);
+                        r.onchange = () => updateMicStatusUI(r.state);
+                        // 이미 허용 상태면 micStream 자동 획득(prompt 안 뜸)
+                        if (r.state === 'granted') ensureMicPermission();
+                    }
+                } catch(e) { /* 미지원 무시 */ }
+            })();
         };
     </script>
 </body>
