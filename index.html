@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>행동, 관찰, 반응을 보고 성취하자 '보라AI'</title>
-    <!-- BORA v3.10 (2026-06-08): 빔포인터 트리거 + 안정성·UI 패치 -->
+    <!-- BORA v3.15 (2026-06-29): 사전수행 라벨링 (0.5초 미만 매칭은 "사전수행"으로 분리) -->
     <style>
         :root {
             --bg-color: #000000;
@@ -777,12 +777,17 @@
             clearInterval(timer);
             const endTime = Date.now();
             const delay = ((endTime - startTime) / 1000).toFixed(2);
+            // [v3.15] 0.5초 미만 매칭은 "사전수행"으로 분리 라벨링 (학생이 이미 해당 동작 중인 상태에서 매칭된 경우)
+            let status;
+            if (!isSuccess) status = "실패";
+            else if (parseFloat(delay) < 0.5) status = "사전수행";
+            else status = "성공";
             const newLog = {
                 date: new Date().toLocaleString(),
                 student: localStorage.getItem('bora_v40_student') || '미입력',
                 subject: localStorage.getItem('bora_v40_subject') || '일반',
                 cat: currentCat, cmd: currentCmd,
-                delay: isSuccess ? delay : "시간초과", status: isSuccess ? "성공" : "실패"
+                delay: isSuccess ? delay : "시간초과", status: status
             };
             logs.unshift(newLog); currentSessionLogs.push(newLog);
             if (logs.length > 500) logs.pop();
@@ -807,7 +812,9 @@
         }
 
         function renderLogs() {
-            document.getElementById('log-list').innerHTML = logs.map(l => `<div class="log-item"><span style="color:var(--primary-cyan)">[${escHtml(l.cat)}]</span> <b>${escHtml(l.cmd)}</b> - <span style="color:${l.status === '성공' ? 'var(--success)' : 'var(--danger)'}">${l.status}</span><br>지연: <span style="font-size:1.3rem; color:var(--primary-yellow)">${l.delay}s</span></div>`).join('');
+            // [v3.15] 사전수행(주황)·성공(녹색)·실패(빨강) 3색 분기
+            const statusColor = (s) => s === '성공' ? 'var(--success)' : (s === '사전수행' ? 'var(--primary-yellow)' : 'var(--danger)');
+            document.getElementById('log-list').innerHTML = logs.map(l => `<div class="log-item"><span style="color:var(--primary-cyan)">[${escHtml(l.cat)}]</span> <b>${escHtml(l.cmd)}</b> - <span style="color:${statusColor(l.status)}">${l.status}</span><br>지연: <span style="font-size:1.3rem; color:var(--primary-yellow)">${l.delay}s</span></div>`).join('');
         }
 
         function clearLogs() {
