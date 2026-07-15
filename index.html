@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>행동, 관찰, 반응을 보고 성취하자 '보라AI'</title>
-    <!-- BORA v3.15 (2026-06-29): 사전수행 라벨링 (0.5초 미만 매칭은 "사전수행"으로 분리) -->
+    <!-- BORA v3.16 (2026-07-15): 마이크 상태 표시 안정화 (onstart 복원·onerror 필터링) -->
     <style>
         :root {
             --bg-color: #000000;
@@ -567,16 +567,29 @@
                 }
             };
 
+            // [v3.16] 재시작 성공 시 statusEl을 LIVE로 자동 복원
+            recognition.onstart = () => {
+                if (isRunning && !permissionDenied) {
+                    const statusEl = document.getElementById('engine-status');
+                    if (statusEl) statusEl.innerText = "LIVE";
+                }
+            };
+
             recognition.onerror = (event) => {
                 console.warn('Speech recognition error:', event.error);
                 const statusEl = document.getElementById('engine-status');
                 // [v3.10] 권한 거부 시 무한 재시도 중단
                 if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-                    statusEl.innerHTML = '<span style="color:red;">🔒 마이크 권한 필요</span>';
+                    if (statusEl) statusEl.innerHTML = '<span style="color:red;">🔒 마이크 권한 필요</span>';
                     permissionDenied = true;
                     return;
                 }
-                statusEl.innerHTML = `<span style="color:orange;">⚠️ ${event.error}</span>`;
+                // [v3.16] 일시적·정상적 에러(no-speech, aborted, audio-capture, network)는 헤더 표시하지 않음
+                // 이런 에러는 자연 발생하며 재시작으로 복구되므로 사용자에게 노출할 필요 없음
+                const transientErrors = ['no-speech', 'aborted', 'audio-capture', 'network'];
+                if (!transientErrors.includes(event.error)) {
+                    if (statusEl) statusEl.innerHTML = `<span style="color:orange;">⚠️ ${event.error}</span>`;
+                }
                 if (isRunning && !permissionDenied) {
                     clearTimeout(restartTimer);
                     restartTimer = setTimeout(() => { try { recognition.start(); } catch(e){} }, 1000);
@@ -591,6 +604,18 @@
                 }
             };
         }
+
+        // [v3.16] statusEl heartbeat: 3초마다 수업 중 상태가 오염되었는지 확인하여 자동 복원
+        setInterval(() => {
+            if (!isRunning || permissionDenied) return;
+            const statusEl = document.getElementById('engine-status');
+            if (!statusEl) return;
+            const txt = statusEl.innerText || '';
+            // "LIVE" 또는 "OFF"가 아니고, 정상 상태 표시가 아니면 복원
+            if (txt !== 'LIVE' && txt !== 'OFF' && !txt.includes('마이크 권한')) {
+                statusEl.innerText = 'LIVE';
+            }
+        }, 3000);
 
         // [v3.10] 최신 브라우저 호환 beforeunload
         window.addEventListener('beforeunload', function(e) {
